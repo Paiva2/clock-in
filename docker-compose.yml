@@ -1,0 +1,11 @@
+version: '3'
+services:
+  postgres-db:
+    container_name: "database_clock-in"
+    image: 'bitnami/postgresql'
+    ports:
+      - "5432:5432"
+    environment:
+      - POSTGRES_USER=development
+      - POSTGRES_PASSWORD=development
+      - POSTGRES_DB=clock-in-db
