@@ -12,7 +12,7 @@ import java.util.Date;
 @Getter
 @Setter
 @Entity
-@Table(name = "TB_EMPLOYE_POSITION")
+@Table(name = "TB_EMPLOYEE_POSITIONS")
 public class EmployeePosition {
     @EmbeddedId
     private EmployeePositionKey employeePositionKey = new EmployeePositionKey();

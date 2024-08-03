@@ -1,0 +1,2 @@
+INSERT INTO "clock-in-db".public.tb_system_roles (SR_ROLE, SR_CREATED_AT, SR_UPDATED_AT) VALUES('USER', NOW(), NOW());
+INSERT INTO "clock-in-db".public.tb_system_roles (SR_ROLE, SR_CREATED_AT, SR_UPDATED_AT) VALUES('ADMIN', NOW(), NOW());

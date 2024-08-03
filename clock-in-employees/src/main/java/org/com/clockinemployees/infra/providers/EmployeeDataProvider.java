@@ -1,0 +1,26 @@
+package org.com.clockinemployees.infra.providers;
+
+import lombok.AllArgsConstructor;
+import org.com.clockinemployees.domain.entity.Employee;
+import org.com.clockinemployees.infra.repository.EmployeeRepository;
+import org.springframework.stereotype.Component;
+
+import java.util.Optional;
+
+@AllArgsConstructor
+@Component
+public class EmployeeDataProvider {
+    private final EmployeeRepository employeeRepository;
+
+    public Employee save(Employee employee) {
+        return employeeRepository.save(employee);
+    }
+
+    public Optional<Employee> findByEmail(String email) {
+        return employeeRepository.findByEmail(email);
+    }
+
+    public Optional<Employee> findByFullName(String firstName, String lastName) {
+        return employeeRepository.findByFirstNameAndLastName(firstName, lastName);
+    }
+}

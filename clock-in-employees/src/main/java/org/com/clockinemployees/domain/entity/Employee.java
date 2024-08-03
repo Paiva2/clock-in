@@ -1,10 +1,7 @@
 package org.com.clockinemployees.domain.entity;
 
 import jakarta.persistence.*;
-import lombok.AllArgsConstructor;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
+import lombok.*;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
 
@@ -16,6 +13,7 @@ import java.util.List;
 @Getter
 @Setter
 @Entity
+@Builder
 @Table(name = "TB_EMPLOYEES")
 public class Employee {
     @Id
@@ -35,7 +33,7 @@ public class Employee {
     @Column(name = "EM_PASSWORD", nullable = false, unique = false)
     private String password;
 
-    @Column(name = "EM_PROFILE_PICTURE_URL", nullable = false, unique = false)
+    @Column(name = "EM_PROFILE_PICTURE_URL", nullable = true, unique = false)
     private String profilePictureUrl;
 
     @CreationTimestamp
