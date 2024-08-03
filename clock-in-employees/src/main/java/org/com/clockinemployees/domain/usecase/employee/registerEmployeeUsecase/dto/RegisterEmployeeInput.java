@@ -19,12 +19,15 @@ public class RegisterEmployeeInput {
 
     @Email
     private String email;
-
+    
     private Long positionId;
 
+    @NotEmpty
     private String password;
 
     private String phone;
+
+    private Long managerId;
 
     @NotEmpty
     private String street;

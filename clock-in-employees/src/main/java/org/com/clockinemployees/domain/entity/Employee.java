@@ -52,4 +52,10 @@ public class Employee {
 
     @OneToMany(mappedBy = "employee")
     private List<EmployeePosition> employeePositions;
+
+    @OneToMany(mappedBy = "employee")
+    private List<EmployeeManager> employeeManagers;
+
+    @OneToMany(mappedBy = "manager")
+    private List<EmployeeManager> managerEmployees;
 }

@@ -6,7 +6,7 @@ BEGIN
 END;
 $$ language 'plpgsql';
 
-CREATE TRIGGER update_user_task_updated_on
+CREATE TRIGGER update_employee_task_updated_on
     BEFORE UPDATE
     ON
         "clock-in-db".public.TB_EMPLOYEES
@@ -23,7 +23,7 @@ BEGIN
 END;
 $$ language 'plpgsql';
 
-CREATE TRIGGER update_user_task_updated_on
+CREATE TRIGGER update_personal_data_task_updated_on
     BEFORE UPDATE
     ON
         "clock-in-db".public.TB_PERSONAL_DATAS
@@ -40,7 +40,7 @@ BEGIN
 END;
 $$ language 'plpgsql';
 
-CREATE TRIGGER update_user_task_updated_on
+CREATE TRIGGER update_positions_task_updated_on
     BEFORE UPDATE
     ON
         "clock-in-db".public.TB_POSITIONS
@@ -57,7 +57,7 @@ BEGIN
 END;
 $$ language 'plpgsql';
 
-CREATE TRIGGER update_user_task_updated_on
+CREATE TRIGGER update_system_role_task_updated_on
     BEFORE UPDATE
     ON
         "clock-in-db".public.TB_SYSTEM_ROLES
@@ -74,7 +74,7 @@ BEGIN
 END;
 $$ language 'plpgsql';
 
-CREATE TRIGGER update_user_task_updated_on
+CREATE TRIGGER update_employee_position_task_updated_on
     BEFORE UPDATE
     ON
         "clock-in-db".public.TB_EMPLOYEE_POSITIONS

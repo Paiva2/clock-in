@@ -8,7 +8,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 @RestController
-@RequestMapping("/employee")
+@RequestMapping("employee")
 public interface EmployeeController {
     @PostMapping("/register")
     ResponseEntity<RegisterEmployeeOutput> registerEmployee(RegisterEmployeeInput input);

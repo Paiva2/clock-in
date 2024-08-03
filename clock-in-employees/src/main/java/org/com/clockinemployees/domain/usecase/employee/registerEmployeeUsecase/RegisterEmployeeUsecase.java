@@ -8,10 +8,7 @@ import org.com.clockinemployees.domain.strategy.passwordValidator.PasswordValida
 import org.com.clockinemployees.domain.strategy.phoneValidation.PhoneValidationStrategy;
 import org.com.clockinemployees.domain.usecase.employee.registerEmployeeUsecase.dto.RegisterEmployeeInput;
 import org.com.clockinemployees.domain.usecase.employee.registerEmployeeUsecase.dto.RegisterEmployeeOutput;
-import org.com.clockinemployees.domain.usecase.employee.registerEmployeeUsecase.exception.EmailAlreadyUsedException;
-import org.com.clockinemployees.domain.usecase.employee.registerEmployeeUsecase.exception.FullNameAlreadyUsedException;
-import org.com.clockinemployees.domain.usecase.employee.registerEmployeeUsecase.exception.PositionNotFoundException;
-import org.com.clockinemployees.domain.usecase.employee.registerEmployeeUsecase.exception.RoleNotFoundException;
+import org.com.clockinemployees.domain.usecase.employee.registerEmployeeUsecase.exception.*;
 import org.com.clockinemployees.infra.providers.*;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -106,7 +103,7 @@ public class RegisterEmployeeUsecase {
     private Position findPosition(Long positionId) {
         return positionDataProvider.findPositionById(positionId).orElseThrow(PositionNotFoundException::new);
     }
-
+    
     private SystemRole findRole(Role role) {
         return systemRoleDataProvider.findByRole(role).orElseThrow(RoleNotFoundException::new);
     }

@@ -16,6 +16,10 @@ public class EmployeeDataProvider {
         return employeeRepository.save(employee);
     }
 
+    public Optional<Employee> findById(Long id) {
+        return employeeRepository.findById(id);
+    }
+
     public Optional<Employee> findByEmail(String email) {
         return employeeRepository.findByEmail(email);
     }
