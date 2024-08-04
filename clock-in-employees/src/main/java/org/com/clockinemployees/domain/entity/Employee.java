@@ -44,6 +44,9 @@ public class Employee {
     @Column(name = "EM_UPDATED_AT", nullable = false)
     private Date updatedAt;
 
+    @Column(name = "EM_DELETED_AT", nullable = true)
+    private Date deletedAt;
+
     @OneToOne(mappedBy = "employee")
     private PersonalData personalData;
 

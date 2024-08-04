@@ -2,9 +2,13 @@ package org.com.clockinemployees.infra.providers;
 
 import lombok.AllArgsConstructor;
 import org.com.clockinemployees.domain.entity.Employee;
+import org.com.clockinemployees.domain.enums.EnterprisePosition;
 import org.com.clockinemployees.infra.repository.EmployeeRepository;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Component;
 
+import java.util.Objects;
 import java.util.Optional;
 
 @AllArgsConstructor
@@ -26,5 +30,11 @@ public class EmployeeDataProvider {
 
     public Optional<Employee> findByFullName(String firstName, String lastName) {
         return employeeRepository.findByFirstNameAndLastName(firstName, lastName);
+    }
+
+    public Page<Employee> listAllEmployees(PageRequest pageRequest, String employeeName, String email, EnterprisePosition enterprisePosition) {
+        String positionName = Objects.nonNull(enterprisePosition) ? enterprisePosition.name() : null;
+
+        return employeeRepository.findAllPaginated(employeeName, email, positionName, pageRequest);
     }
 }
