@@ -2,6 +2,7 @@ package org.com.clockinemployees.domain.usecase.employee.registerEmployeeUsecase
 
 import jakarta.transaction.Transactional;
 import lombok.AllArgsConstructor;
+import lombok.Builder;
 import org.com.clockinemployees.domain.entity.*;
 import org.com.clockinemployees.domain.enums.Role;
 import org.com.clockinemployees.domain.strategy.passwordValidator.PasswordValidatorStrategy;
@@ -18,6 +19,7 @@ import java.util.Optional;
 
 @Service
 @AllArgsConstructor
+@Builder
 public class RegisterEmployeeUsecase {
     private final PasswordValidatorStrategy passwordValidatorStrategy;
     private final PhoneValidationStrategy phoneValidationStrategy;
@@ -103,7 +105,7 @@ public class RegisterEmployeeUsecase {
     private Position findPosition(Long positionId) {
         return positionDataProvider.findPositionById(positionId).orElseThrow(PositionNotFoundException::new);
     }
-    
+
     private SystemRole findRole(Role role) {
         return systemRoleDataProvider.findByRole(role).orElseThrow(RoleNotFoundException::new);
     }
