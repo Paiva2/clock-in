@@ -5,12 +5,14 @@ import org.com.clockinemployees.domain.entity.EmployeeManager;
 import org.com.clockinemployees.infra.repository.EmployeeManagerRepository;
 import org.springframework.stereotype.Component;
 
+import java.util.Optional;
+
 @Component
 @AllArgsConstructor
 public class EmployeeManagerDataProvider {
     private final EmployeeManagerRepository employeeManagerRepository;
 
-    public EmployeeManager save(EmployeeManager employeeManager) {
-        return employeeManagerRepository.save(employeeManager);
+    public Optional<EmployeeManager> findEmployeeSuperior(Long managerId, Long employeeId) {
+        return employeeManagerRepository.findByManagerIdAndEmployeeId(managerId, employeeId);
     }
 }

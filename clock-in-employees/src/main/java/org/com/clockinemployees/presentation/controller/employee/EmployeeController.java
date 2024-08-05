@@ -1,14 +1,12 @@
 package org.com.clockinemployees.presentation.controller.employee;
 
 import org.com.clockinemployees.domain.enums.EnterprisePosition;
+import org.com.clockinemployees.domain.usecase.employee.disableEmployeeUsecase.dto.DisableEmployeeOutput;
 import org.com.clockinemployees.domain.usecase.employee.listEmployees.dto.ListEmployeesOutput;
 import org.com.clockinemployees.domain.usecase.employee.registerEmployeeUsecase.dto.RegisterEmployeeInput;
 import org.com.clockinemployees.domain.usecase.employee.registerEmployeeUsecase.dto.RegisterEmployeeOutput;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequestMapping("employee")
@@ -18,4 +16,7 @@ public interface EmployeeController {
 
     @GetMapping("/list")
     ResponseEntity<ListEmployeesOutput> listEmployees(Integer page, Integer size, String name, String email, EnterprisePosition position);
+
+    @PutMapping("/disable/{employeeId}")
+    ResponseEntity<DisableEmployeeOutput> disableEmployee(@PathVariable("employeeId") Long employeeId);
 }

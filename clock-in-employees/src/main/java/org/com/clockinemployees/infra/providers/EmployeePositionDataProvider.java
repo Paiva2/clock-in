@@ -5,6 +5,8 @@ import org.com.clockinemployees.domain.entity.EmployeePosition;
 import org.com.clockinemployees.infra.repository.EmployeePositionRepository;
 import org.springframework.stereotype.Component;
 
+import java.util.Optional;
+
 @AllArgsConstructor
 @Component
 public class EmployeePositionDataProvider {
@@ -12,5 +14,9 @@ public class EmployeePositionDataProvider {
 
     public EmployeePosition create(EmployeePosition employeePosition) {
         return employeePositionRepository.save(employeePosition);
+    }
+
+    public Optional<EmployeePosition> findHrByEmployeeId(Long superiorId) {
+        return employeePositionRepository.findHrByEmployeeId(superiorId);
     }
 }

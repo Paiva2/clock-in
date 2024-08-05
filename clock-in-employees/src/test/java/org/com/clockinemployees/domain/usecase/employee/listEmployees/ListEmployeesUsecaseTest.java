@@ -150,7 +150,7 @@ class ListEmployeesUsecaseTest {
         mockEmployee.setEmail("email@test.com");
         mockEmployee.setFirstName("first_name_test");
         mockEmployee.setLastName("last_name_test");
-        mockEmployee.setDeletedAt(null);
+        mockEmployee.setDisabledAt(null);
         mockEmployee.setPassword("hashed_password");
         mockEmployee.setProfilePictureUrl(null);
         mockEmployee.setPersonalData(mountPersonalData());

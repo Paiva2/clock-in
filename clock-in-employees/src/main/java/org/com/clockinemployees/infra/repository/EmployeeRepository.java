@@ -23,7 +23,7 @@ public interface EmployeeRepository extends JpaRepository<Employee, Long> {
         WHERE (:employeeName IS NULL OR lower(concat(em.em_first_name, ' ', em.em_last_name)) LIKE concat('%', lower(:employeeName), '%'))
         AND (:email IS NULL OR lower(em.em_email) = lower(:email))
         AND (:enterprisePosition IS NULL OR po.ps_name = :enterprisePosition)
-        AND em.em_deleted_at IS NULL
+        AND em.em_disabled_at IS NULL
         """, nativeQuery = true)
     Page<Employee> findAllPaginated(@Param("employeeName") String employeeName, @Param("email") String email, @Param("enterprisePosition") String enterprisePosition, Pageable pageable);
 }
