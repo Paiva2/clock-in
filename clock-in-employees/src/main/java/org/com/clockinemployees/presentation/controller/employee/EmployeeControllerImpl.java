@@ -3,6 +3,9 @@ package org.com.clockinemployees.presentation.controller.employee;
 import jakarta.validation.Valid;
 import lombok.AllArgsConstructor;
 import org.com.clockinemployees.domain.enums.EnterprisePosition;
+import org.com.clockinemployees.domain.usecase.employee.authenticateEmployeeUsecase.AuthenticateEmployeeUsecase;
+import org.com.clockinemployees.domain.usecase.employee.authenticateEmployeeUsecase.dto.AuthenticateEmployeeInput;
+import org.com.clockinemployees.domain.usecase.employee.authenticateEmployeeUsecase.dto.AuthenticateEmployeeOutput;
 import org.com.clockinemployees.domain.usecase.employee.disableEmployeeUsecase.DisableEmployeeUsecase;
 import org.com.clockinemployees.domain.usecase.employee.disableEmployeeUsecase.dto.DisableEmployeeOutput;
 import org.com.clockinemployees.domain.usecase.employee.listEmployees.ListEmployeesUsecase;
@@ -24,6 +27,7 @@ public class EmployeeControllerImpl implements EmployeeController {
     private final RegisterEmployeeUsecase registerEmployeeUsecase;
     private final ListEmployeesUsecase listEmployeesUsecase;
     private final DisableEmployeeUsecase disableEmployeeUsecase;
+    private final AuthenticateEmployeeUsecase authenticateEmployeeUsecase;
 
     @Override
     public ResponseEntity<RegisterEmployeeOutput> registerEmployee(
@@ -31,6 +35,14 @@ public class EmployeeControllerImpl implements EmployeeController {
     ) {
         RegisterEmployeeOutput output = registerEmployeeUsecase.execute(input);
         return new ResponseEntity<>(output, HttpStatus.CREATED);
+    }
+
+    @Override
+    public ResponseEntity<AuthenticateEmployeeOutput> authenticate(
+        @RequestBody @Valid AuthenticateEmployeeInput input
+    ) {
+        AuthenticateEmployeeOutput output = authenticateEmployeeUsecase.execute(input);
+        return new ResponseEntity<>(output, HttpStatus.OK);
     }
 
     @Override

@@ -1,4 +1,5 @@
 version: '3'
+
 services:
   postgres-db:
     container_name: "database_clock-in"
@@ -9,3 +10,14 @@ services:
       - POSTGRES_USER=development
       - POSTGRES_PASSWORD=development
       - POSTGRES_DB=clock-in-db
+  keycloack:
+    container_name: "keycloack_clock-in"
+    image: "codingpuss/keycloak-silicon:16.1.1"
+    restart: always
+    environment:
+      - KEYCLOAK_USER=admin
+      - KEYCLOAK_PASSWORD=admin
+      - KEYCLOAK_EXTRA_ARGS="-Dkeycloak.profile.feature.upload_scripts=enabled"
+    ports:
+      - "8181:8080"
+    depends_on: [ postgres-db ]
