@@ -2,9 +2,9 @@ spring:
   application:
     name: clock-in-employees
   datasource:
-    url: jdbc:postgresql://localhost:5432/clock-in-db
-    username: development
-    password: development
+    url: ${DATABASE_URL}
+    username: ${DATABASE_USERNAME}
+    password: ${DATABASE_PASSWORD}
   jpa:
     hibernate:
       ddl-auto: update
@@ -30,3 +30,11 @@ logging:
       springframework:
         web: DEBUG
       hibernate: ERROR
+
+keycloack:
+  server-url: ${KEYCLOACK_SERVER_URL}
+  realm:
+    name: ${KEYCLOACK_REALM}
+  client_secret: ${KEYCLOACK_CLIENT_SECRET}
+  username_admin: ${KEYCLOACK_USERNAME_ADMIN}
+  password_admin: ${KEYCLOACK_PASSWORD_ADMIN}

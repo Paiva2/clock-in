@@ -9,7 +9,11 @@ import org.com.clockinemployees.domain.strategy.passwordValidator.PasswordValida
 import org.com.clockinemployees.domain.strategy.phoneValidation.PhoneValidationStrategy;
 import org.com.clockinemployees.domain.usecase.employee.registerEmployeeUsecase.dto.RegisterEmployeeInput;
 import org.com.clockinemployees.domain.usecase.employee.registerEmployeeUsecase.dto.RegisterEmployeeOutput;
-import org.com.clockinemployees.domain.usecase.employee.registerEmployeeUsecase.exception.*;
+import org.com.clockinemployees.domain.usecase.employee.registerEmployeeUsecase.exception.EmailAlreadyUsedException;
+import org.com.clockinemployees.domain.usecase.employee.registerEmployeeUsecase.exception.FullNameAlreadyUsedException;
+import org.com.clockinemployees.domain.usecase.employee.registerEmployeeUsecase.exception.PositionNotFoundException;
+import org.com.clockinemployees.domain.usecase.employee.registerEmployeeUsecase.exception.RoleNotFoundException;
+import org.com.clockinemployees.infra.keycloack.employee.EmployeeKeycloackClient;
 import org.com.clockinemployees.infra.providers.*;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -31,6 +35,7 @@ public class RegisterEmployeeUsecase {
     private final PersonalDataDataProvider personalDataDataProvider;
     private final PositionDataProvider positionDataProvider;
     private final EmployeePositionDataProvider employeePositionDataProvider;
+    private final EmployeeKeycloackClient employeeKeycloackClient;
 
     @Transactional
     public RegisterEmployeeOutput execute(RegisterEmployeeInput registerEmployeeInput) {
@@ -42,11 +47,11 @@ public class RegisterEmployeeUsecase {
 
         validateEmailUsed(registerEmployeeInput.getEmail());
         validateFirstNameAndLastNameUsed(registerEmployeeInput);
-        hashNewPassword(registerEmployeeInput);
 
         Employee fillEmployee = fillEmployee(registerEmployeeInput);
 
         Employee employeeCreated = persistNewEmployee(fillEmployee);
+        createEmployeeKeycloack(employeeCreated, registerEmployeeInput.getPassword());
 
         setEmployeeRole(employeeCreated);
         setEmployeePosition(employeeCreated, registerEmployeeInput.getPositionId());
@@ -72,20 +77,24 @@ public class RegisterEmployeeUsecase {
         }
     }
 
-    private void hashNewPassword(RegisterEmployeeInput employee) {
-        String rawPassword = employee.getPassword();
-        String hashedPassword = passwordEncoder.encode(rawPassword);
-
-        employee.setPassword(hashedPassword);
-    }
-
     private Employee fillEmployee(RegisterEmployeeInput employeeInput) {
+        String rawPassword = employeeInput.getPassword();
+        String hashedPassword = hashPassword(rawPassword);
+
         return Employee.builder()
             .firstName(employeeInput.getFirstName())
             .lastName(employeeInput.getLastName())
             .email(employeeInput.getEmail())
-            .password(employeeInput.getPassword())
+            .password(hashedPassword)
             .build();
+    }
+
+    private String hashPassword(String rawPassword) {
+        return passwordEncoder.encode(rawPassword);
+    }
+
+    private void createEmployeeKeycloack(Employee employee, String rawPassword) {
+        employeeKeycloackClient.registerUser(employee, rawPassword);
     }
 
     private void setEmployeeRole(Employee employee) {

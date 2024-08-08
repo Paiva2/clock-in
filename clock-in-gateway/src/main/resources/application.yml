@@ -5,16 +5,16 @@ spring:
     oauth2:
       resourceserver:
         jwt:
-          issuer-uri: http://localhost:8181/auth/realms/clock-in-realm
+          issuer-uri: ${KEYCLOACK_ISSUER_URL}
       client:
         registration:
           keycloack:
-            client-id: clock-in-oauth2-client
+            client-id: ${KEYCLOACK_CLIENT_ID}
             authorization-grant-type: authorization_code
             scope: open_id
         provider:
           keycloack:
-            issuer-uri: http://localhost:8181/auth/realms/clock-in-realm
+            issuer-uri: ${KEYCLOACK_ISSUER_URL}
             user-name-attribute: preferred_username
   cloud:
     gateway:
@@ -33,7 +33,7 @@ eureka:
 
 keycloack:
   realm:
-    token-url: http://localhost:8181/auth/realms/clock-in-realm/protocol/openid-connect/token
+    token-url: ${KEYCLOACK_TOKEN_URL}
 
 gateway:
   url: http://localhost:9000

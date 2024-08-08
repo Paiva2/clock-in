@@ -18,3 +18,4 @@ target/
 *.iml
 *.ipr
 TODO.TXT
+variables.env
