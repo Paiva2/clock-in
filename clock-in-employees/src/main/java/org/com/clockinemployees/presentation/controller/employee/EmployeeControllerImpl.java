@@ -16,6 +16,8 @@ import org.com.clockinemployees.domain.usecase.employee.registerEmployeeUsecase.
 import org.com.clockinemployees.domain.usecase.employee.registerEmployeeUsecase.dto.RegisterEmployeeOutput;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -24,6 +26,8 @@ import org.springframework.web.bind.annotation.RestController;
 @RestController
 @AllArgsConstructor
 public class EmployeeControllerImpl implements EmployeeController {
+    private final static String CLAIM_SUBJECT_ID = "user_application_id";
+
     private final RegisterEmployeeUsecase registerEmployeeUsecase;
     private final ListEmployeesUsecase listEmployeesUsecase;
     private final DisableEmployeeUsecase disableEmployeeUsecase;
@@ -67,8 +71,12 @@ public class EmployeeControllerImpl implements EmployeeController {
 
     @Override
     public ResponseEntity<DisableEmployeeOutput> disableEmployee(
+        Authentication authentication,
         @PathVariable("employeeId") Long employeeId
     ) {
+        Jwt principal = (Jwt) authentication.getPrincipal();
+        String subjectId = principal.getClaimAsString(CLAIM_SUBJECT_ID);
+
         Long mockSuperiorId = 1L; // todo: fix
         DisableEmployeeOutput output = disableEmployeeUsecase.execute(mockSuperiorId, employeeId);
         return new ResponseEntity<>(output, HttpStatus.OK);

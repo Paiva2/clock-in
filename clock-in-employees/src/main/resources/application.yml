@@ -33,6 +33,7 @@ logging:
 
 keycloack:
   server-url: ${KEYCLOACK_SERVER_URL}
+  issuer-uri: ${KEYCLOACK_ISSUER_URL}
   realm:
     name: ${KEYCLOACK_REALM}
   client_secret: ${KEYCLOACK_CLIENT_SECRET}
