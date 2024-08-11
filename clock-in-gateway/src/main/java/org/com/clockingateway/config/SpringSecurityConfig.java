@@ -22,6 +22,7 @@ public class SpringSecurityConfig {
     @Bean
     public SecurityWebFilterChain filterChain(ServerHttpSecurity http) {
         http
+            .csrf(ServerHttpSecurity.CsrfSpec::disable)
             .authorizeExchange(exchange -> exchange
                 .pathMatchers("/employee/register").permitAll()
                 .pathMatchers("/oauth2/**").permitAll()

@@ -4,8 +4,11 @@ import lombok.AllArgsConstructor;
 import org.com.clockinemployees.config.KeyloackBuilderConfig;
 import org.com.clockinemployees.domain.entity.Employee;
 import org.com.clockinemployees.domain.usecase.employee.registerEmployeeUsecase.exception.EmailAlreadyUsedException;
+import org.keycloak.admin.client.CreatedResponseUtil;
+import org.keycloak.admin.client.resource.RealmResource;
 import org.keycloak.admin.client.resource.UsersResource;
 import org.keycloak.representations.idm.CredentialRepresentation;
+import org.keycloak.representations.idm.RoleRepresentation;
 import org.keycloak.representations.idm.UserRepresentation;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Component;
@@ -20,11 +23,16 @@ import java.util.Map;
 @Component
 @AllArgsConstructor
 public class EmployeeKeycloackClient {
+    private static final String DEFAULT_USER_ROLE = "user";
+    private static final String USER_ATTRIBUTE_ID = "user_application_id";
+
     private final KeyloackBuilderConfig keyloackBuilderConfig;
 
     public void registerUser(Employee employee, String rawPassword) {
-        UsersResource kcInstance = getInstance();
-        Response response = kcInstance.create(mountRepresentation(employee, rawPassword));
+        RealmResource kcRealmResource = getInstance();
+        UsersResource kcUsers = kcRealmResource.users();
+
+        Response response = kcUsers.create(mountUserRepresentation(employee, rawPassword));
 
         if (response.getStatus() == HttpStatus.CONFLICT.value()) {
             throw new EmailAlreadyUsedException();
@@ -32,18 +40,23 @@ public class EmployeeKeycloackClient {
             throw new ResponseStatusException(HttpStatus.valueOf(response.getStatus()));
         }
 
+        String userKcId = CreatedResponseUtil.getCreatedId(response);
+
+        RoleRepresentation userRealmRole = kcRealmResource.roles().get(DEFAULT_USER_ROLE).toRepresentation();
+        kcUsers.get(userKcId).roles().realmLevel().add(List.of(userRealmRole));
+
         response.close();
     }
 
-    private UsersResource getInstance() {
-        return keyloackBuilderConfig.getInstance().realm(keyloackBuilderConfig.getRealm()).users();
+    private RealmResource getInstance() {
+        return keyloackBuilderConfig.getInstance().realm(keyloackBuilderConfig.getRealm());
     }
 
-    private UserRepresentation mountRepresentation(Employee employee, String rawPassword) {
+    private UserRepresentation mountUserRepresentation(Employee employee, String rawPassword) {
         Map<String, List<String>> userAttrs = new LinkedHashMap<>();
-        userAttrs.put("user_application_id", List.of(employee.getId().toString()));
+        userAttrs.put(USER_ATTRIBUTE_ID, List.of(employee.getId().toString()));
 
-        CredentialRepresentation credentialRepresentation = createPasswordCredentials(rawPassword);
+        CredentialRepresentation credentialRepresentation = createUserPasswordCredentials(rawPassword);
 
         UserRepresentation userRepresentation = new UserRepresentation();
         userRepresentation.setUsername(employee.getEmail());
@@ -54,12 +67,11 @@ public class EmployeeKeycloackClient {
         userRepresentation.setEnabled(true);
         userRepresentation.setEmailVerified(true);
         userRepresentation.setAttributes(userAttrs);
-        userRepresentation.setRealmRoles(List.of("user"));
 
         return userRepresentation;
     }
 
-    private CredentialRepresentation createPasswordCredentials(String password) {
+    private CredentialRepresentation createUserPasswordCredentials(String password) {
         CredentialRepresentation passwordCredentials = new CredentialRepresentation();
 
         passwordCredentials.setTemporary(false);
