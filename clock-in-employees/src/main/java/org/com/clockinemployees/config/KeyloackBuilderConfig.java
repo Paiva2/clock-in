@@ -12,22 +12,22 @@ import org.springframework.stereotype.Component;
 public class KeyloackBuilderConfig {
     private Keycloak keycloak = null;
 
-    @Value("${keycloack.server-url}")
+    @Value("${keycloak.server-url}")
     private String serverUrl;
 
     @Getter
-    @Value("${keycloack.realm.name}")
+    @Value("${keycloak.realm.name}")
     private String realm;
 
     private String clientId = "admin-cli";
 
-    @Value("${keycloack.client_secret}")
+    @Value("${keycloak.client_secret}")
     private String clientSecret;
 
-    @Value("${keycloack.username_admin}")
+    @Value("${keycloak.username_admin}")
     private String userName;
 
-    @Value("${keycloack.password_admin}")
+    @Value("${keycloak.password_admin}")
     private String password;
 
     public Keycloak getInstance() {

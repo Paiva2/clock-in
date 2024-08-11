@@ -16,7 +16,12 @@ spring:
         jdbc:
           batch_size: 50
         order_inserts: true
-
+  security:
+    oauth2:
+      resourceserver:
+        jwt:
+          issuer-uri: ${KEYCLOAK_ISSUER_URL}
+    
 server:
   port: 9001
   error:
@@ -31,11 +36,11 @@ logging:
         web: DEBUG
       hibernate: ERROR
 
-keycloack:
-  server-url: ${KEYCLOACK_SERVER_URL}
-  issuer-uri: ${KEYCLOACK_ISSUER_URL}
+keycloak:
+  server-url: ${KEYCLOAK_SERVER_URL}
+  issuer-uri: ${KEYCLOAK_ISSUER_URL}
   realm:
-    name: ${KEYCLOACK_REALM}
-  client_secret: ${KEYCLOACK_CLIENT_SECRET}
-  username_admin: ${KEYCLOACK_USERNAME_ADMIN}
-  password_admin: ${KEYCLOACK_PASSWORD_ADMIN}
+    name: ${KEYCLOAK_REALM}
+  client_secret: ${KEYCLOAK_CLIENT_SECRET}
+  username_admin: ${KEYCLOAK_USERNAME_ADMIN}
+  password_admin: ${KEYCLOAK_PASSWORD_ADMIN}

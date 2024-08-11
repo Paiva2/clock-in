@@ -5,21 +5,24 @@ spring:
     oauth2:
       resourceserver:
         jwt:
-          issuer-uri: ${KEYCLOACK_ISSUER_URL}
+          issuer-uri: ${KEYCLOAK_ISSUER_URL}
       client:
         registration:
-          keycloack:
-            client-id: ${KEYCLOACK_CLIENT_ID}
+          keycloak:
+            client-id: ${KEYCLOAK_CLIENT_ID}
+            client-secret: ${KEYCLOAK_CLIENT_SECRET}}
             authorization-grant-type: authorization_code
-            scope: open_id
+            scope: openid, email, profile
         provider:
-          keycloack:
-            issuer-uri: ${KEYCLOACK_ISSUER_URL}
+          keycloak:
+            issuer-uri: ${KEYCLOAK_ISSUER_URL}
             user-name-attribute: preferred_username
   cloud:
     gateway:
       default-filters:
-        - TokenRelay
+        - DedupeResponseHeader=Access-Control-Allow-Credentials Access-Control-Allow-Origin
+        - TokenRelay=
+        - SaveSession
 
 server:
   port: 9000
@@ -31,9 +34,9 @@ eureka:
     service-url:
       defaultZone: http://localhost:8761/eureka
 
-keycloack:
+keycloak:
   realm:
-    token-url: ${KEYCLOACK_TOKEN_URL}
+    token-url: ${KEYCLOAK_TOKEN_URL}
 
 gateway:
   url: http://localhost:9000

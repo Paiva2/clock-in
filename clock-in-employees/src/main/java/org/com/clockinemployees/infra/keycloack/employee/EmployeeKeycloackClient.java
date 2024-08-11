@@ -3,12 +3,13 @@ package org.com.clockinemployees.infra.keycloack.employee;
 import lombok.AllArgsConstructor;
 import org.com.clockinemployees.config.KeyloackBuilderConfig;
 import org.com.clockinemployees.domain.entity.Employee;
+import org.com.clockinemployees.domain.usecase.employee.registerEmployeeUsecase.exception.EmailAlreadyUsedException;
 import org.keycloak.admin.client.resource.UsersResource;
 import org.keycloak.representations.idm.CredentialRepresentation;
 import org.keycloak.representations.idm.UserRepresentation;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Component;
-import org.springframework.web.client.HttpClientErrorException;
+import org.springframework.web.server.ResponseStatusException;
 
 import javax.ws.rs.core.Response;
 import java.util.Collections;
@@ -25,8 +26,10 @@ public class EmployeeKeycloackClient {
         UsersResource kcInstance = getInstance();
         Response response = kcInstance.create(mountRepresentation(employee, rawPassword));
 
-        if (response.getStatus() != Response.Status.CREATED.getStatusCode()) {
-            throw new HttpClientErrorException(HttpStatus.BAD_REQUEST, "Error while creating new user on Keycloack.");
+        if (response.getStatus() == HttpStatus.CONFLICT.value()) {
+            throw new EmailAlreadyUsedException();
+        } else if (response.getStatus() != HttpStatus.CREATED.value()) {
+            throw new ResponseStatusException(HttpStatus.valueOf(response.getStatus()));
         }
 
         response.close();

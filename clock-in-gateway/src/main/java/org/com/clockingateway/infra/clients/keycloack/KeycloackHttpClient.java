@@ -11,15 +11,15 @@ import org.springframework.web.client.RestTemplate;
 
 @Component
 public class KeycloackHttpClient {
-    @Value("${keycloack.realm.token-url}")
+    @Value("${keycloak.realm.token-url}")
     private String KEYCLOACK_TOKEN_REALM_URL;
 
-    @Value("${spring.security.oauth2.client.registration.keycloack.client-id}")
+    @Value("${spring.security.oauth2.client.registration.keycloak.client-id}")
     private String KEYCLOACK_CLIENT_ID;
 
     private final RestTemplate restTemplate = new RestTemplate();
 
-    public ResponseEntity<KeycloackTokenOutput> getToken(EmployeeLoginInput loginInput) {
+    public ResponseEntity<KeycloackTokenOutput> login(EmployeeLoginInput loginInput) {
         MultiValueMap<String, String> formValue = new LinkedMultiValueMap<>();
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_FORM_URLENCODED);

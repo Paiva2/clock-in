@@ -1,5 +1,6 @@
 package org.com.clockinemployees.config;
 
+import jakarta.servlet.DispatcherType;
 import org.com.clockinemployees.config.utils.KeycloakJwtRolesConverter;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
@@ -21,7 +22,7 @@ import org.springframework.security.web.SecurityFilterChain;
 @EnableWebSecurity
 @EnableMethodSecurity(securedEnabled = true)
 public class SecurityConfig {
-    @Value("${keycloack.issuer-uri}")
+    @Value("${keycloak.issuer-uri}")
     private String TOKEN_ISSUER_URI;
 
     @Bean
@@ -36,10 +37,13 @@ public class SecurityConfig {
         );
 
         http.csrf(AbstractHttpConfigurer::disable).authorizeHttpRequests(req ->
-            req.requestMatchers("/employee/register", "/employee/auth").permitAll()
-                .requestMatchers("/employee/list").hasAnyAuthority("ROLE_realm_user", "ROLE_realm_admin", "ROLE_realm_human_resources")
+            req.dispatcherTypeMatchers(DispatcherType.ERROR).permitAll()
+                .requestMatchers("/employee/register").permitAll()
+                .anyRequest().authenticated()
         );
-        
+
+        http.csrf(AbstractHttpConfigurer::disable);
+
         return http.build();
     }
 

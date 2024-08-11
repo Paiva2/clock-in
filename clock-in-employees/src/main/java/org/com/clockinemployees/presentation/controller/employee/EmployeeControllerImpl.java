@@ -3,9 +3,6 @@ package org.com.clockinemployees.presentation.controller.employee;
 import jakarta.validation.Valid;
 import lombok.AllArgsConstructor;
 import org.com.clockinemployees.domain.enums.EnterprisePosition;
-import org.com.clockinemployees.domain.usecase.employee.authenticateEmployeeUsecase.AuthenticateEmployeeUsecase;
-import org.com.clockinemployees.domain.usecase.employee.authenticateEmployeeUsecase.dto.AuthenticateEmployeeInput;
-import org.com.clockinemployees.domain.usecase.employee.authenticateEmployeeUsecase.dto.AuthenticateEmployeeOutput;
 import org.com.clockinemployees.domain.usecase.employee.disableEmployeeUsecase.DisableEmployeeUsecase;
 import org.com.clockinemployees.domain.usecase.employee.disableEmployeeUsecase.dto.DisableEmployeeOutput;
 import org.com.clockinemployees.domain.usecase.employee.listEmployees.ListEmployeesUsecase;
@@ -16,7 +13,7 @@ import org.com.clockinemployees.domain.usecase.employee.registerEmployeeUsecase.
 import org.com.clockinemployees.domain.usecase.employee.registerEmployeeUsecase.dto.RegisterEmployeeOutput;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.core.Authentication;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -31,7 +28,6 @@ public class EmployeeControllerImpl implements EmployeeController {
     private final RegisterEmployeeUsecase registerEmployeeUsecase;
     private final ListEmployeesUsecase listEmployeesUsecase;
     private final DisableEmployeeUsecase disableEmployeeUsecase;
-    private final AuthenticateEmployeeUsecase authenticateEmployeeUsecase;
 
     @Override
     public ResponseEntity<RegisterEmployeeOutput> registerEmployee(
@@ -39,14 +35,6 @@ public class EmployeeControllerImpl implements EmployeeController {
     ) {
         RegisterEmployeeOutput output = registerEmployeeUsecase.execute(input);
         return new ResponseEntity<>(output, HttpStatus.CREATED);
-    }
-
-    @Override
-    public ResponseEntity<AuthenticateEmployeeOutput> authenticate(
-        @RequestBody @Valid AuthenticateEmployeeInput input
-    ) {
-        AuthenticateEmployeeOutput output = authenticateEmployeeUsecase.execute(input);
-        return new ResponseEntity<>(output, HttpStatus.OK);
     }
 
     @Override
@@ -71,14 +59,20 @@ public class EmployeeControllerImpl implements EmployeeController {
 
     @Override
     public ResponseEntity<DisableEmployeeOutput> disableEmployee(
-        Authentication authentication,
+        @AuthenticationPrincipal Jwt jwt,
         @PathVariable("employeeId") Long employeeId
     ) {
-        Jwt principal = (Jwt) authentication.getPrincipal();
-        String subjectId = principal.getClaimAsString(CLAIM_SUBJECT_ID);
+        String subjectId = jwt.getClaimAsString(CLAIM_SUBJECT_ID);
 
-        Long mockSuperiorId = 1L; // todo: fix
-        DisableEmployeeOutput output = disableEmployeeUsecase.execute(mockSuperiorId, employeeId);
+        DisableEmployeeOutput output = disableEmployeeUsecase.execute(Long.valueOf(subjectId), employeeId);
         return new ResponseEntity<>(output, HttpStatus.OK);
+    }
+
+    @Override
+    public ResponseEntity<String> userinfo(
+        @AuthenticationPrincipal Jwt jwt
+    ) {
+        String subjectId = jwt.getClaimAsString(CLAIM_SUBJECT_ID);
+        return new ResponseEntity<>("Sub id: " + subjectId, HttpStatus.OK);
     }
 }
