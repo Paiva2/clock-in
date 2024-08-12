@@ -6,7 +6,7 @@ import org.com.clockinemployees.domain.entity.Employee;
 import org.com.clockinemployees.domain.entity.EmployeePosition;
 import org.com.clockinemployees.domain.usecase.employee.common.exception.EmployeeNotFoundException;
 import org.com.clockinemployees.domain.usecase.employee.disableEmployeeUsecase.dto.DisableEmployeeOutput;
-import org.com.clockinemployees.domain.usecase.employee.disableEmployeeUsecase.exception.EmployeeSuperiorNotFoundException;
+import org.com.clockinemployees.domain.usecase.employee.common.exception.EmployeeSuperiorNotFoundException;
 import org.com.clockinemployees.infra.providers.EmployeeDataProvider;
 import org.com.clockinemployees.infra.providers.EmployeeManagerDataProvider;
 import org.com.clockinemployees.infra.providers.EmployeePositionDataProvider;

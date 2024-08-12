@@ -24,6 +24,10 @@ public class EmployeeDataProvider {
         return employeeRepository.findById(id);
     }
 
+    public Optional<Employee> findByResourceServerId(String id) {
+        return employeeRepository.findByResourceServerId(id);
+    }
+
     public Optional<Employee> findByEmail(String email) {
         return employeeRepository.findByEmail(email);
     }

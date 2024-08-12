@@ -14,6 +14,9 @@ import java.util.Optional;
 public interface EmployeeRepository extends JpaRepository<Employee, Long> {
     Optional<Employee> findByEmail(String email);
 
+    @Query("SELECT em FROM Employee em WHERE em.keycloakId = :id")
+    Optional<Employee> findByResourceServerId(@Param("id") String id);
+
     Optional<Employee> findByFirstNameAndLastName(String firstName, String lastName);
 
     @Query(value = """

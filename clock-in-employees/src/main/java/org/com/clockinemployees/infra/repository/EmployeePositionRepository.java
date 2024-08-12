@@ -16,4 +16,6 @@ public interface EmployeePositionRepository extends JpaRepository<EmployeePositi
         "WHERE ep.employee.id = :employeeId " +
         "AND epp.name = 'HUMAN_RESOURCES'")
     Optional<EmployeePosition> findHrByEmployeeId(@Param("employeeId") Long employeeId);
+
+    Optional<EmployeePosition> findByEmployeeId(Long employeeId);
 }

@@ -4,6 +4,5 @@ public enum EnterprisePosition {
     HUMAN_RESOURCES,
     EMPLOYEE,
     MANAGER,
-    DIRECTOR,
     CEO
 }

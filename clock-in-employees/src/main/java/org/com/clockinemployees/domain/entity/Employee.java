@@ -36,6 +36,9 @@ public class Employee {
     @Column(name = "EM_PROFILE_PICTURE_URL", nullable = true, unique = false)
     private String profilePictureUrl;
 
+    @Column(name = "EM_KEYCLOAK_ID", nullable = false, unique = true)
+    private String keycloakId;
+
     @CreationTimestamp
     @Column(name = "EM_CREATED_AT", nullable = false)
     private Date createdAt;
@@ -50,15 +53,15 @@ public class Employee {
     @OneToOne(mappedBy = "employee")
     private PersonalData personalData;
 
-    @OneToMany(mappedBy = "employee")
+    @OneToMany(mappedBy = "employee", fetch = FetchType.LAZY)
     private List<EmployeeSystemRole> employeeSystemRoles;
 
-    @OneToMany(mappedBy = "employee")
+    @OneToMany(mappedBy = "employee", fetch = FetchType.LAZY)
     private List<EmployeePosition> employeePositions;
 
-    @OneToMany(mappedBy = "employee")
+    @OneToMany(mappedBy = "employee", fetch = FetchType.LAZY)
     private List<EmployeeManager> employeeManagers;
 
-    @OneToMany(mappedBy = "manager")
+    @OneToMany(mappedBy = "manager", fetch = FetchType.LAZY)
     private List<EmployeeManager> managerEmployees;
 }

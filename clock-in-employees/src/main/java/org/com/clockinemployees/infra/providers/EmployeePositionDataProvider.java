@@ -16,7 +16,15 @@ public class EmployeePositionDataProvider {
         return employeePositionRepository.save(employeePosition);
     }
 
+    public void remove(EmployeePosition employeePosition) {
+        employeePositionRepository.delete(employeePosition);
+    }
+
     public Optional<EmployeePosition> findHrByEmployeeId(Long superiorId) {
         return employeePositionRepository.findHrByEmployeeId(superiorId);
+    }
+
+    public Optional<EmployeePosition> findByEmployeeId(Long superiorId) {
+        return employeePositionRepository.findByEmployeeId(superiorId);
     }
 }
