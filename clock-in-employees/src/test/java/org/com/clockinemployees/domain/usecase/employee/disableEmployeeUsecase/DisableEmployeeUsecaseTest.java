@@ -3,6 +3,8 @@ package org.com.clockinemployees.domain.usecase.employee.disableEmployeeUsecase;
 import org.com.clockinemployees.domain.entity.Employee;
 import org.com.clockinemployees.domain.entity.EmployeeManager;
 import org.com.clockinemployees.domain.entity.EmployeePosition;
+import org.com.clockinemployees.domain.entity.Position;
+import org.com.clockinemployees.domain.enums.EnterprisePosition;
 import org.com.clockinemployees.domain.usecase.employee.common.exception.EmployeeNotFoundException;
 import org.com.clockinemployees.domain.usecase.employee.disableEmployeeUsecase.dto.DisableEmployeeOutput;
 import org.com.clockinemployees.domain.usecase.employee.common.exception.EmployeeSuperiorNotFoundException;
@@ -19,6 +21,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.util.Date;
 import java.util.Optional;
+import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
@@ -59,6 +62,10 @@ class DisableEmployeeUsecaseTest {
             .build();
     }
 
+    private Position mockPosition() {
+        return Position.builder().build();
+    }
+
     private EmployeePosition mockEmployeePosition() {
         return new EmployeePosition();
     }
@@ -68,34 +75,14 @@ class DisableEmployeeUsecaseTest {
     }
 
     @Test
-    void shouldCallSutWithCorrectlyProvidedParams() {
-        Long superiorId = 1L;
-        Long employeeId = 2L;
-
-        DisableEmployeeUsecase mockSut = mock(DisableEmployeeUsecase.class);
-        mockSut.execute(superiorId, employeeId);
-
-        ArgumentCaptor<Long> superiorIdCaptor = ArgumentCaptor.forClass(Long.class);
-        ArgumentCaptor<Long> employeeIdCaptor = ArgumentCaptor.forClass(Long.class);
-
-        verify(mockSut, times(1)).execute(superiorIdCaptor.capture(), employeeIdCaptor.capture());
-
-        Long superiorIdCaptured = superiorIdCaptor.getValue();
-        Long employeeIdCaptured = employeeIdCaptor.getValue();
-
-        assertEquals(superiorIdCaptured, 1L);
-        assertEquals(employeeIdCaptured, 2L);
-    }
-
-    @Test
     void shouldThrowExceptionIfSuperiorNotFound() {
-        Long superiorId = 1L;
+        String superiorIdResourceServer = UUID.randomUUID().toString();
         Long employeeId = 2L;
 
-        when(employeeDataProvider.findById(Mockito.anyLong())).thenReturn(Optional.empty());
+        when(employeeDataProvider.findByResourceServerId(superiorIdResourceServer)).thenReturn(Optional.empty());
 
         Exception exception = assertThrows(EmployeeSuperiorNotFoundException.class, () -> {
-            sut.execute(superiorId, employeeId);
+            sut.execute(superiorIdResourceServer, employeeId);
         });
 
         assertEquals("Provided superior not found as employee superior!", exception.getMessage());
@@ -103,16 +90,16 @@ class DisableEmployeeUsecaseTest {
 
     @Test
     void shouldThrowExceptionIfSuperiorIsDisabled() {
-        Long superiorId = 1L;
+        String superiorIdResourceServer = UUID.randomUUID().toString();
         Long employeeId = 2L;
 
         Employee superiorMock = mockSuperior();
         superiorMock.setDisabledAt(new Date());
 
-        when(employeeDataProvider.findById(Mockito.anyLong())).thenReturn(Optional.of(superiorMock));
+        when(employeeDataProvider.findByResourceServerId(superiorIdResourceServer)).thenReturn(Optional.of(superiorMock));
 
         Exception exception = assertThrows(EmployeeSuperiorNotFoundException.class, () -> {
-            sut.execute(superiorId, employeeId);
+            sut.execute(superiorIdResourceServer, employeeId);
         });
 
         assertEquals("Provided superior not found as employee superior!", exception.getMessage());
@@ -120,15 +107,17 @@ class DisableEmployeeUsecaseTest {
 
     @Test
     void shouldThrowExceptionIfEmployeeNotFound() {
+        String superiorIdResourceServer = UUID.randomUUID().toString();
         Long superiorId = 1L;
         Long employeeId = 2L;
 
         Employee mockSuperior = mockSuperior();
+        mockSuperior.setId(superiorId);
 
-        doReturn(Optional.of(mockSuperior)).doReturn(Optional.empty()).when(employeeDataProvider).findById(Mockito.anyLong());
+        when(employeeDataProvider.findByResourceServerId(superiorIdResourceServer)).thenReturn(Optional.of(mockSuperior));
 
         Exception exception = assertThrows(EmployeeNotFoundException.class, () -> {
-            sut.execute(superiorId, employeeId);
+            sut.execute(superiorIdResourceServer, employeeId);
         });
 
         assertEquals("Employee not found!", exception.getMessage());
@@ -136,25 +125,29 @@ class DisableEmployeeUsecaseTest {
 
     @Test
     void shouldThrowExceptionIfEmployeeIsDisabled() {
+        String superiorIdResourceServer = UUID.randomUUID().toString();
         Long superiorId = 1L;
         Long employeeId = 2L;
 
         Employee mockSuperior = mockSuperior();
-        Employee mockEmployee = mockEmployee();
+        mockSuperior.setId(superiorId);
 
+        Employee mockEmployee = mockEmployee();
         mockEmployee.setDisabledAt(new Date());
 
-        doReturn(Optional.of(mockSuperior)).doReturn(Optional.of(mockEmployee)).when(employeeDataProvider).findById(Mockito.anyLong());
+        when(employeeDataProvider.findByResourceServerId(superiorIdResourceServer)).thenReturn(Optional.of(mockSuperior));
+        when(employeeDataProvider.findById(employeeId)).thenReturn(Optional.of(mockEmployee));
 
         Exception exception = assertThrows(EmployeeNotFoundException.class, () -> {
-            sut.execute(superiorId, employeeId);
+            sut.execute(superiorIdResourceServer, employeeId);
         });
 
         assertEquals("Employee not found!", exception.getMessage());
     }
 
     @Test
-    void shouldCallDataProviderToFindHumanResourceSuperiorWithCorrectlyParams() {
+    void shouldCallDataProviderToFindSuperiorPositionWithCorrectlyParams() {
+        String superiorIdResourceServer = UUID.randomUUID().toString();
         Long superiorId = 1L;
         Long employeeId = 2L;
 
@@ -164,15 +157,25 @@ class DisableEmployeeUsecaseTest {
         Employee mockEmployee = mockEmployee();
         mockEmployee.setId(employeeId);
 
-        doReturn(Optional.of(mockSuperior)).doReturn(Optional.of(mockEmployee)).when(employeeDataProvider).findById(Mockito.anyLong());
-        doReturn(Optional.of(mockEmployeePosition())).when(employeePositionDataProvider).findHrByEmployeeId(Mockito.anyLong());
-        when(employeeDataProvider.save(Mockito.any())).thenReturn(mockEmployee);
+        Position mockPositionSuperior = mockPosition();
+        mockPositionSuperior.setName(EnterprisePosition.MANAGER);
 
-        sut.execute(superiorId, employeeId);
+        EmployeePosition superiorPosition = mockEmployeePosition();
+        superiorPosition.setPosition(mockPositionSuperior);
+
+        EmployeeManager mockEmployeeManager = mockEmployeeManager();
+
+        when(employeeDataProvider.findByResourceServerId(superiorIdResourceServer)).thenReturn(Optional.of(mockSuperior));
+        when(employeeDataProvider.findById(employeeId)).thenReturn(Optional.of(mockEmployee));
+        doReturn(Optional.of(superiorPosition)).when(employeePositionDataProvider).findByEmployeeId(Mockito.anyLong());
+        when(employeeDataProvider.save(Mockito.any())).thenReturn(mockEmployee);
+        when(employeeManagerDataProvider.findEmployeeSuperior(mockSuperior.getId(), mockEmployee.getId())).thenReturn(Optional.of(mockEmployeeManager));
+
+        sut.execute(superiorIdResourceServer, employeeId);
 
         ArgumentCaptor<Long> superiorCaptor = ArgumentCaptor.forClass(Long.class);
 
-        verify(employeePositionDataProvider, times(1)).findHrByEmployeeId(superiorCaptor.capture());
+        verify(employeePositionDataProvider, times(1)).findByEmployeeId(superiorCaptor.capture());
 
         Long superiorIdCaptured = superiorCaptor.getValue();
 
@@ -180,7 +183,8 @@ class DisableEmployeeUsecaseTest {
     }
 
     @Test
-    void shouldSearchForEmployeeSuperiorIfSuperiorIsNotFromHumanResources() {
+    void shouldSearchForEmployeeSuperiorIfSuperiorIsNotFromHumanResourcesOrCeo() {
+        String superiorIdResourceServer = UUID.randomUUID().toString();
         Long superiorId = 1L;
         Long employeeId = 2L;
 
@@ -190,12 +194,22 @@ class DisableEmployeeUsecaseTest {
         Employee mockEmployee = mockEmployee();
         mockEmployee.setId(employeeId);
 
-        doReturn(Optional.of(mockSuperior)).doReturn(Optional.of(mockEmployee)).when(employeeDataProvider).findById(Mockito.anyLong());
-        doReturn(Optional.empty()).when(employeePositionDataProvider).findHrByEmployeeId(Mockito.anyLong());
-        when(employeeManagerDataProvider.findEmployeeSuperior(Mockito.anyLong(), Mockito.anyLong())).thenReturn(Optional.of(mockEmployeeManager()));
-        when(employeeDataProvider.save(Mockito.any())).thenReturn(mockEmployee);
+        Position mockPositionSuperior = mockPosition();
+        mockPositionSuperior.setName(EnterprisePosition.MANAGER);
 
-        sut.execute(superiorId, employeeId);
+        EmployeePosition superiorPosition = mockEmployeePosition();
+        superiorPosition.setPosition(mockPositionSuperior);
+
+        EmployeeManager mockEmployeeManager = mockEmployeeManager();
+
+        when(employeeDataProvider.findByResourceServerId(superiorIdResourceServer)).thenReturn(Optional.of(mockSuperior));
+        when(employeeDataProvider.findById(employeeId)).thenReturn(Optional.of(mockEmployee));
+        doReturn(Optional.empty()).when(employeePositionDataProvider).findByEmployeeId(Mockito.anyLong());
+        when(employeeDataProvider.save(Mockito.any())).thenReturn(mockEmployee);
+        when(employeePositionDataProvider.findByEmployeeId(mockSuperior.getId())).thenReturn(Optional.of(superiorPosition));
+        when(employeeManagerDataProvider.findEmployeeSuperior(mockSuperior.getId(), mockEmployee.getId())).thenReturn(Optional.of(mockEmployeeManager));
+
+        sut.execute(superiorIdResourceServer, employeeId);
 
         ArgumentCaptor<Long> superiorCaptor = ArgumentCaptor.forClass(Long.class);
         ArgumentCaptor<Long> employeeCaptor = ArgumentCaptor.forClass(Long.class);
@@ -211,6 +225,7 @@ class DisableEmployeeUsecaseTest {
 
     @Test
     void shouldThrowExceptionIfSuperiorProvidedIsNotHrAndNotSuperiorFromEmployee() {
+        String superiorIdResourceServer = UUID.randomUUID().toString();
         Long superiorId = 1L;
         Long employeeId = 2L;
 
@@ -220,12 +235,21 @@ class DisableEmployeeUsecaseTest {
         Employee mockEmployee = mockEmployee();
         mockEmployee.setId(employeeId);
 
-        doReturn(Optional.of(mockSuperior)).doReturn(Optional.of(mockEmployee)).when(employeeDataProvider).findById(Mockito.anyLong());
-        doReturn(Optional.empty()).when(employeePositionDataProvider).findHrByEmployeeId(Mockito.anyLong());
+        Position mockPositionSuperior = mockPosition();
+        mockPositionSuperior.setName(EnterprisePosition.MANAGER);
+
+        EmployeePosition superiorPosition = mockEmployeePosition();
+        superiorPosition.setPosition(mockPositionSuperior);
+
+        when(employeeDataProvider.findByResourceServerId(superiorIdResourceServer)).thenReturn(Optional.of(mockSuperior));
+        when(employeeDataProvider.findById(employeeId)).thenReturn(Optional.of(mockEmployee));
+        doReturn(Optional.empty()).when(employeePositionDataProvider).findByEmployeeId(Mockito.anyLong());
         when(employeeManagerDataProvider.findEmployeeSuperior(Mockito.anyLong(), Mockito.anyLong())).thenReturn(Optional.empty());
+        when(employeePositionDataProvider.findByEmployeeId(mockSuperior.getId())).thenReturn(Optional.of(superiorPosition));
+        when(employeeManagerDataProvider.findEmployeeSuperior(mockSuperior.getId(), mockEmployee.getId())).thenReturn(Optional.empty());
 
         Exception exception = assertThrows(EmployeeSuperiorNotFoundException.class, () -> {
-            sut.execute(superiorId, employeeId);
+            sut.execute(superiorIdResourceServer, employeeId);
         });
 
         assertEquals("Provided superior not found as employee superior!", exception.getMessage());
@@ -233,6 +257,7 @@ class DisableEmployeeUsecaseTest {
 
     @Test
     void shouldPersistEmployeeWithDisabledAtSetted() {
+        String superiorIdResourceServer = UUID.randomUUID().toString();
         Long superiorId = 1L;
         Long employeeId = 2L;
 
@@ -242,11 +267,22 @@ class DisableEmployeeUsecaseTest {
         Employee mockEmployee = mockEmployee();
         mockEmployee.setId(employeeId);
 
-        doReturn(Optional.of(mockSuperior)).doReturn(Optional.of(mockEmployee)).when(employeeDataProvider).findById(Mockito.anyLong());
-        doReturn(Optional.of(mockSuperior)).when(employeePositionDataProvider).findHrByEmployeeId(Mockito.anyLong());
-        when(employeeDataProvider.save(Mockito.any())).thenReturn(mockEmployee);
+        Position mockPositionSuperior = mockPosition();
+        mockPositionSuperior.setName(EnterprisePosition.MANAGER);
 
-        sut.execute(superiorId, employeeId);
+        EmployeePosition superiorPosition = mockEmployeePosition();
+        superiorPosition.setPosition(mockPositionSuperior);
+
+        EmployeeManager mockEmployeeManager = mockEmployeeManager();
+
+        when(employeeDataProvider.findByResourceServerId(superiorIdResourceServer)).thenReturn(Optional.of(mockSuperior));
+        when(employeeDataProvider.findById(employeeId)).thenReturn(Optional.of(mockEmployee));
+        doReturn(Optional.of(mockSuperior)).when(employeePositionDataProvider).findByEmployeeId(Mockito.anyLong());
+        when(employeeDataProvider.save(Mockito.any())).thenReturn(mockEmployee);
+        when(employeePositionDataProvider.findByEmployeeId(mockSuperior.getId())).thenReturn(Optional.of(superiorPosition));
+        when(employeeManagerDataProvider.findEmployeeSuperior(mockSuperior.getId(), mockEmployee.getId())).thenReturn(Optional.of(mockEmployeeManager));
+
+        sut.execute(superiorIdResourceServer, employeeId);
 
         ArgumentCaptor<Employee> employeeCaptor = ArgumentCaptor.forClass(Employee.class);
 
@@ -260,20 +296,32 @@ class DisableEmployeeUsecaseTest {
 
     @Test
     void shouldReturnOutputWithoutErrors() {
-        Long superiorId = 1L;
+        String superiorIdResourceServer = UUID.randomUUID().toString();
         Long employeeId = 2L;
+        Long mockSuperiorId = 1L;
 
         Employee mockSuperior = mockSuperior();
-        mockSuperior.setId(superiorId);
+        mockSuperior.setId(mockSuperiorId);
 
         Employee mockEmployee = mockEmployee();
         mockEmployee.setId(employeeId);
 
-        doReturn(Optional.of(mockSuperior)).doReturn(Optional.of(mockEmployee)).when(employeeDataProvider).findById(Mockito.anyLong());
-        doReturn(Optional.of(mockSuperior)).when(employeePositionDataProvider).findHrByEmployeeId(Mockito.anyLong());
-        when(employeeDataProvider.save(Mockito.any())).thenReturn(mockEmployee);
+        Position mockPositionSuperior = mockPosition();
+        mockPositionSuperior.setName(EnterprisePosition.MANAGER);
 
-        DisableEmployeeOutput output = sut.execute(superiorId, employeeId);
+        EmployeePosition superiorPosition = mockEmployeePosition();
+        superiorPosition.setPosition(mockPositionSuperior);
+
+        EmployeeManager mockEmployeeManager = mockEmployeeManager();
+
+        when(employeeDataProvider.findByResourceServerId(superiorIdResourceServer)).thenReturn(Optional.of(mockSuperior));
+        when(employeeDataProvider.findById(employeeId)).thenReturn(Optional.of(mockEmployee));
+        doReturn(Optional.of(mockSuperior)).when(employeePositionDataProvider).findByEmployeeId(Mockito.anyLong());
+        when(employeeDataProvider.save(Mockito.any())).thenReturn(mockEmployee);
+        when(employeePositionDataProvider.findByEmployeeId(mockSuperior.getId())).thenReturn(Optional.of(superiorPosition));
+        when(employeeManagerDataProvider.findEmployeeSuperior(mockSuperior.getId(), mockEmployee.getId())).thenReturn(Optional.of(mockEmployeeManager));
+
+        DisableEmployeeOutput output = sut.execute(superiorIdResourceServer, employeeId);
 
         assertEquals(mockEmployee.getId(), output.getEmployeeId());
         assertEquals(mockEmployee.getFirstName(), output.getFirstName());

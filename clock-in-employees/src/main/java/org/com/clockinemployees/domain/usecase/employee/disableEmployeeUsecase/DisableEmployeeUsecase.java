@@ -4,9 +4,11 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import org.com.clockinemployees.domain.entity.Employee;
 import org.com.clockinemployees.domain.entity.EmployeePosition;
+import org.com.clockinemployees.domain.enums.EnterprisePosition;
 import org.com.clockinemployees.domain.usecase.employee.common.exception.EmployeeNotFoundException;
-import org.com.clockinemployees.domain.usecase.employee.disableEmployeeUsecase.dto.DisableEmployeeOutput;
 import org.com.clockinemployees.domain.usecase.employee.common.exception.EmployeeSuperiorNotFoundException;
+import org.com.clockinemployees.domain.usecase.employee.disableEmployeeUsecase.dto.DisableEmployeeOutput;
+import org.com.clockinemployees.domain.usecase.position.editEmployeePositionUsecase.exception.EmployeePositionNotFoundException;
 import org.com.clockinemployees.infra.providers.EmployeeDataProvider;
 import org.com.clockinemployees.infra.providers.EmployeeManagerDataProvider;
 import org.com.clockinemployees.infra.providers.EmployeePositionDataProvider;
@@ -14,7 +16,6 @@ import org.springframework.stereotype.Service;
 
 import java.util.Date;
 import java.util.Objects;
-import java.util.Optional;
 
 @AllArgsConstructor
 @Builder
@@ -24,13 +25,13 @@ public class DisableEmployeeUsecase {
     private final EmployeeManagerDataProvider employeeManagerDataProvider;
     private final EmployeePositionDataProvider employeePositionDataProvider;
 
-    public DisableEmployeeOutput execute(Long superiorId, Long employeeId) {
+    public DisableEmployeeOutput execute(String superiorId, Long employeeId) {
         Employee superior = findSuperior(superiorId);
 
         if (Objects.nonNull(superior.getDisabledAt())) {
             throw new EmployeeSuperiorNotFoundException();
         }
-
+        
         Employee employee = findEmployee(employeeId);
 
         if (Objects.nonNull(employee.getDisabledAt())) {
@@ -43,11 +44,11 @@ public class DisableEmployeeUsecase {
 
         Employee disabledEmployee = persistEmployeeDisabled(employee);
 
-        return mountOutput(disabledEmployee, superiorId);
+        return mountOutput(disabledEmployee, superior.getId());
     }
 
-    private Employee findSuperior(Long superiorId) {
-        return employeeDataProvider.findById(superiorId).orElseThrow(EmployeeSuperiorNotFoundException::new);
+    private Employee findSuperior(String superiorId) {
+        return employeeDataProvider.findByResourceServerId(superiorId).orElseThrow(EmployeeSuperiorNotFoundException::new);
     }
 
     private Employee findEmployee(Long employeeId) {
@@ -55,9 +56,10 @@ public class DisableEmployeeUsecase {
     }
 
     private void handleSuperiorBeingHumanResources(Employee superior, Employee employee) {
-        Optional<EmployeePosition> superiorHumanResources = checkIfSuperiorIsFromHumanResources(superior.getId());
+        EmployeePosition superiorHumanResources = getSuperiorPosition(superior.getId());
 
-        if (superiorHumanResources.isPresent()) return;
+        if (superiorHumanResources.getPosition().getName().equals(EnterprisePosition.HUMAN_RESOURCES) || superiorHumanResources.getPosition().getName().equals(EnterprisePosition.CEO))
+            return;
 
         checkEmployeeSuperior(superior.getId(), employee.getId());
     }
@@ -66,8 +68,8 @@ public class DisableEmployeeUsecase {
         employeeManagerDataProvider.findEmployeeSuperior(superiorId, employeeId).orElseThrow(EmployeeSuperiorNotFoundException::new);
     }
 
-    private Optional<EmployeePosition> checkIfSuperiorIsFromHumanResources(Long superiorId) {
-        return employeePositionDataProvider.findHrByEmployeeId(superiorId);
+    private EmployeePosition getSuperiorPosition(Long superiorId) {
+        return employeePositionDataProvider.findByEmployeeId(superiorId).orElseThrow(EmployeePositionNotFoundException::new);
     }
 
     private Employee persistEmployeeDisabled(Employee employee) {

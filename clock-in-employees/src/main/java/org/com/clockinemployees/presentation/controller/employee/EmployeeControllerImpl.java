@@ -62,9 +62,7 @@ public class EmployeeControllerImpl implements EmployeeController {
         @AuthenticationPrincipal Jwt jwt,
         @PathVariable("employeeId") Long employeeId
     ) {
-        String subjectId = jwt.getClaimAsString(CLAIM_SUBJECT_ID);
-
-        DisableEmployeeOutput output = disableEmployeeUsecase.execute(Long.valueOf(subjectId), employeeId);
+        DisableEmployeeOutput output = disableEmployeeUsecase.execute(jwt.getSubject(), employeeId);
         return new ResponseEntity<>(output, HttpStatus.OK);
     }
 
