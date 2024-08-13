@@ -6,6 +6,7 @@ import org.com.clockinemployees.infra.repository.EmployeePositionRepository;
 import org.springframework.stereotype.Component;
 
 import java.util.Optional;
+import java.util.Set;
 
 @AllArgsConstructor
 @Component
@@ -26,5 +27,9 @@ public class EmployeePositionDataProvider {
 
     public Optional<EmployeePosition> findByEmployeeId(Long superiorId) {
         return employeePositionRepository.findByEmployeeId(superiorId);
+    }
+
+    public Set<EmployeePosition> findAllByEmployeeId(Long employeeId) {
+        return employeePositionRepository.findAllByEmployeeId(employeeId);
     }
 }

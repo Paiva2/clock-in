@@ -11,13 +11,14 @@ import org.com.clockinemployees.domain.usecase.employee.listEmployees.dto.ListEm
 import org.com.clockinemployees.domain.usecase.employee.registerEmployeeUsecase.RegisterEmployeeUsecase;
 import org.com.clockinemployees.domain.usecase.employee.registerEmployeeUsecase.dto.RegisterEmployeeInput;
 import org.com.clockinemployees.domain.usecase.employee.registerEmployeeUsecase.dto.RegisterEmployeeOutput;
-import org.com.clockinemployees.domain.usecase.position.editEmployeePositionUsecase.EditEmployeePositionUsecase;
-import org.com.clockinemployees.domain.usecase.position.editEmployeePositionUsecase.dto.EditEmployeePositionOutput;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.oauth2.jwt.Jwt;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
 
 @RestController
 @AllArgsConstructor
@@ -27,7 +28,6 @@ public class EmployeeControllerImpl implements EmployeeController {
     private final RegisterEmployeeUsecase registerEmployeeUsecase;
     private final ListEmployeesUsecase listEmployeesUsecase;
     private final DisableEmployeeUsecase disableEmployeeUsecase;
-    private final EditEmployeePositionUsecase editEmployeePositionUsecase;
 
     @Override
     public ResponseEntity<RegisterEmployeeOutput> registerEmployee(
@@ -69,20 +69,9 @@ public class EmployeeControllerImpl implements EmployeeController {
     }
 
     @Override
-    public ResponseEntity<EditEmployeePositionOutput> editEmployeePosition(
-        Jwt jwt,
-        @PathVariable("employeeId") Long employeeId,
-        @PathVariable("positionId") Long positionId
-    ) {
-        EditEmployeePositionOutput output = editEmployeePositionUsecase.execute(jwt.getSubject(), employeeId, positionId);
-        return new ResponseEntity<>(output, HttpStatus.OK);
-    }
-    
-    @Override
     public ResponseEntity<String> userinfo(
         @AuthenticationPrincipal Jwt jwt
     ) {
-        String subjectId = jwt.getClaimAsString(CLAIM_SUBJECT_ID);
         return new ResponseEntity<>("Sub id: " + jwt.getSubject(), HttpStatus.OK);
     }
 }

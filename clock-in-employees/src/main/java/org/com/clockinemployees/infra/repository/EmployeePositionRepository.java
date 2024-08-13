@@ -8,6 +8,7 @@ import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import java.util.Optional;
+import java.util.Set;
 
 @Repository
 public interface EmployeePositionRepository extends JpaRepository<EmployeePosition, EmployeePositionKey> {
@@ -18,4 +19,6 @@ public interface EmployeePositionRepository extends JpaRepository<EmployeePositi
     Optional<EmployeePosition> findHrByEmployeeId(@Param("employeeId") Long employeeId);
 
     Optional<EmployeePosition> findByEmployeeId(Long employeeId);
+
+    Set<EmployeePosition> findAllByEmployeeId(Long employeeId);
 }
