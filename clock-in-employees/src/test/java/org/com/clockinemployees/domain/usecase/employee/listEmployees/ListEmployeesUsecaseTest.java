@@ -58,7 +58,7 @@ class ListEmployeesUsecaseTest {
         input.setPerPage(10);
         input.setName("test_name");
         input.setEmail("test_email");
-        input.setPosition(EnterprisePosition.DIRECTOR);
+        input.setPosition(EnterprisePosition.EMPLOYEE);
 
         ListEmployeesUsecase sutMock = mock(ListEmployeesUsecase.class);
         sutMock.execute(input);
@@ -83,7 +83,7 @@ class ListEmployeesUsecaseTest {
         input.setPerPage(10);
         input.setName("test_name");
         input.setEmail("test_email");
-        input.setPosition(EnterprisePosition.DIRECTOR);
+        input.setPosition(EnterprisePosition.EMPLOYEE);
 
         Pageable pageable = PageRequest.of(1, 10);
         Page<Employee> pageEmployee = new PageImpl<>(Collections.emptyList(), pageable, 1);
@@ -107,7 +107,7 @@ class ListEmployeesUsecaseTest {
         input.setPerPage(10);
         input.setName("test_name");
         input.setEmail("test_email");
-        input.setPosition(EnterprisePosition.DIRECTOR);
+        input.setPosition(EnterprisePosition.EMPLOYEE);
 
         Pageable pageable = PageRequest.of(input.getPage(), input.getPerPage());
         Page<Employee> pageEmployee = new PageImpl<>(Collections.emptyList(), pageable, 1);
