@@ -23,17 +23,16 @@ import org.springframework.web.bind.annotation.RestController;
 @RestController
 @AllArgsConstructor
 public class EmployeeControllerImpl implements EmployeeController {
-    private final static String CLAIM_SUBJECT_ID = "user_application_id";
-
     private final RegisterEmployeeUsecase registerEmployeeUsecase;
     private final ListEmployeesUsecase listEmployeesUsecase;
     private final DisableEmployeeUsecase disableEmployeeUsecase;
 
     @Override
     public ResponseEntity<RegisterEmployeeOutput> registerEmployee(
+        @AuthenticationPrincipal Jwt jwt,
         @RequestBody @Valid RegisterEmployeeInput input
     ) {
-        RegisterEmployeeOutput output = registerEmployeeUsecase.execute(input);
+        RegisterEmployeeOutput output = registerEmployeeUsecase.execute(jwt.getSubject(), input);
         return new ResponseEntity<>(output, HttpStatus.CREATED);
     }
 

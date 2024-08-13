@@ -4,15 +4,14 @@ import jakarta.transaction.Transactional;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import org.com.clockinemployees.domain.entity.*;
+import org.com.clockinemployees.domain.enums.EnterprisePosition;
 import org.com.clockinemployees.domain.enums.Role;
 import org.com.clockinemployees.domain.strategy.passwordValidator.PasswordValidatorStrategy;
 import org.com.clockinemployees.domain.strategy.phoneValidation.PhoneValidationStrategy;
 import org.com.clockinemployees.domain.usecase.employee.common.exception.PositionNotFoundException;
 import org.com.clockinemployees.domain.usecase.employee.registerEmployeeUsecase.dto.RegisterEmployeeInput;
 import org.com.clockinemployees.domain.usecase.employee.registerEmployeeUsecase.dto.RegisterEmployeeOutput;
-import org.com.clockinemployees.domain.usecase.employee.registerEmployeeUsecase.exception.EmailAlreadyUsedException;
-import org.com.clockinemployees.domain.usecase.employee.registerEmployeeUsecase.exception.FullNameAlreadyUsedException;
-import org.com.clockinemployees.domain.usecase.employee.registerEmployeeUsecase.exception.RoleNotFoundException;
+import org.com.clockinemployees.domain.usecase.employee.registerEmployeeUsecase.exception.*;
 import org.com.clockinemployees.infra.keycloack.employee.EmployeeKeycloakClient;
 import org.com.clockinemployees.infra.providers.*;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -20,6 +19,7 @@ import org.springframework.stereotype.Service;
 
 import java.util.Objects;
 import java.util.Optional;
+import java.util.Set;
 
 @Service
 @AllArgsConstructor
@@ -38,7 +38,9 @@ public class RegisterEmployeeUsecase {
     private final EmployeeKeycloakClient employeeKeycloakClient;
 
     @Transactional
-    public RegisterEmployeeOutput execute(RegisterEmployeeInput registerEmployeeInput) {
+    public RegisterEmployeeOutput execute(String superiorResourceServerId, RegisterEmployeeInput registerEmployeeInput) {
+        checkSuperiorPermissions(superiorResourceServerId);
+
         passwordValidatorStrategy.validate(registerEmployeeInput.getPassword());
 
         if (Objects.nonNull(registerEmployeeInput.getPhone())) {
@@ -61,6 +63,21 @@ public class RegisterEmployeeUsecase {
         handlePersonalData(employeeCreated, registerEmployeeInput);
 
         return mountOutput(employeeCreated);
+    }
+
+    private void checkSuperiorPermissions(String superiorResourceServerId) {
+        Employee superior = findSuperior(superiorResourceServerId);
+
+        Set<EmployeePosition> superiorPosition = employeePositionDataProvider.findAllByEmployeeId(superior.getId());
+        
+        superiorPosition.stream().filter(sp ->
+                sp.getPosition().getName().equals(EnterprisePosition.HUMAN_RESOURCES) ||
+                    sp.getPosition().getName().equals(EnterprisePosition.CEO))
+            .findAny().orElseThrow(InsufficientPermissionsToRegisterException::new);
+    }
+
+    private Employee findSuperior(String resourceServerId) {
+        return employeeDataProvider.findByResourceServerId(resourceServerId).orElseThrow(SuperiorNotFoundException::new);
     }
 
     private void validateEmailUsed(String email) {

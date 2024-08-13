@@ -9,6 +9,7 @@ import org.com.clockinemployees.domain.usecase.employee.common.exception.Positio
 import org.com.clockinemployees.domain.usecase.employee.registerEmployeeUsecase.dto.RegisterEmployeeInput;
 import org.com.clockinemployees.domain.usecase.employee.registerEmployeeUsecase.dto.RegisterEmployeeOutput;
 import org.com.clockinemployees.domain.usecase.employee.registerEmployeeUsecase.exception.*;
+import org.com.clockinemployees.infra.keycloack.employee.EmployeeKeycloakClient;
 import org.com.clockinemployees.infra.providers.*;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -21,6 +22,8 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 
 import java.util.Date;
 import java.util.Optional;
+import java.util.Set;
+import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
@@ -55,6 +58,9 @@ class RegisterEmployeeUsecaseTest {
     @Mock
     private EmployeePositionDataProvider employeePositionDataProvider;
 
+    @Mock
+    private EmployeeKeycloakClient employeeKeycloakClient;
+
     private RegisterEmployeeUsecase sut;
 
     @BeforeEach
@@ -69,22 +75,31 @@ class RegisterEmployeeUsecaseTest {
             .personalDataDataProvider(personalDataDataProvider)
             .positionDataProvider(positionDataProvider)
             .employeePositionDataProvider(employeePositionDataProvider)
+            .employeeKeycloakClient(employeeKeycloakClient)
             .build();
     }
 
-    private SystemRole mountRole() {
+    private SystemRole mockRole() {
         return SystemRole.builder().build();
     }
 
-    private Position mountPosition() {
+    private Position mockPosition() {
         return Position.builder().build();
     }
 
-    private Employee mountEmployee() {
+    private Employee mockEmployee() {
         return Employee.builder().build();
     }
 
-    private RegisterEmployeeInput mountSutInput() {
+    private Employee mockSuperior() {
+        return Employee.builder().build();
+    }
+
+    private EmployeePosition mockEmployeePosition() {
+        return new EmployeePosition();
+    }
+
+    private RegisterEmployeeInput mockSutInput() {
         return RegisterEmployeeInput.builder()
             .email("test-email")
             .city("test-city")
@@ -103,33 +118,76 @@ class RegisterEmployeeUsecaseTest {
     }
 
     @Test
-    void shouldCallSutWithCorrectlyProvidedParams() {
-        RegisterEmployeeInput input = mountSutInput();
-        RegisterEmployeeUsecase sutMock = Mockito.mock(RegisterEmployeeUsecase.class);
+    void shouldThrowExceptionIfSuperiorNotFound() {
+        String mockResourceServerSuperiorId = UUID.randomUUID().toString();
+        RegisterEmployeeInput input = mockSutInput();
+        input.setPassword("invalid-password");
 
-        sutMock.execute(input);
+        Employee mockSuperior = mockSuperior();
+        mockSuperior.setId(1L);
 
-        ArgumentCaptor<RegisterEmployeeInput> inputArgumentCaptor = ArgumentCaptor.forClass(RegisterEmployeeInput.class);
+        Position mockPositionSuperior = mockPosition();
+        mockPositionSuperior.setName(EnterprisePosition.HUMAN_RESOURCES);
 
-        verify(sutMock, times(1)).execute(inputArgumentCaptor.capture());
+        EmployeePosition mockSuperiorEmployeePosition = mockEmployeePosition();
+        mockSuperiorEmployeePosition.setEmployee(mockSuperior);
+        mockSuperiorEmployeePosition.setPosition(mockPositionSuperior);
 
-        RegisterEmployeeInput capturedInput = inputArgumentCaptor.getValue();
+        Exception exception = assertThrows(SuperiorNotFoundException.class, () -> {
+            sut.execute(mockResourceServerSuperiorId, input);
+        });
 
-        assertEquals(input.getEmail(), capturedInput.getEmail());
-        assertEquals(input.getFirstName(), capturedInput.getFirstName());
-        assertEquals(input.getLastName(), capturedInput.getLastName());
-        assertEquals(input.getPassword(), capturedInput.getPassword());
+        assertEquals("Superior not found!", exception.getMessage());
+    }
+
+    @Test
+    void shouldThrowErrorIfSuperiorHasNoPermissionToRegisterEmployees() {
+        String mockResourceServerSuperiorId = UUID.randomUUID().toString();
+        RegisterEmployeeInput input = mockSutInput();
+        input.setPassword("invalid-password");
+
+        Employee mockSuperior = mockSuperior();
+        mockSuperior.setId(1L);
+
+        Position mockPositionSuperior = mockPosition();
+        mockPositionSuperior.setName(EnterprisePosition.EMPLOYEE);
+
+        EmployeePosition mockSuperiorEmployeePosition = mockEmployeePosition();
+        mockSuperiorEmployeePosition.setEmployee(mockSuperior);
+        mockSuperiorEmployeePosition.setPosition(mockPositionSuperior);
+
+        when(employeeDataProvider.findByResourceServerId(mockResourceServerSuperiorId)).thenReturn(Optional.of(mockSuperior));
+        when(employeePositionDataProvider.findAllByEmployeeId(mockSuperior.getId())).thenReturn(Set.of(mockSuperiorEmployeePosition));
+
+        Exception exception = assertThrows(InsufficientPermissionsToRegisterException.class, () -> {
+            sut.execute(mockResourceServerSuperiorId, input);
+        });
+
+        assertEquals("Only CEO's or Human Resource members can create employees!", exception.getMessage());
     }
 
     @Test
     void shouldThrowErrorIfPasswordHasNotStrengthEnough() {
-        RegisterEmployeeInput input = mountSutInput();
+        String mockResourceServerSuperiorId = UUID.randomUUID().toString();
+        RegisterEmployeeInput input = mockSutInput();
         input.setPassword("invalid-password");
 
+        Employee mockSuperior = mockSuperior();
+        mockSuperior.setId(1L);
+
+        Position mockPositionSuperior = mockPosition();
+        mockPositionSuperior.setName(EnterprisePosition.HUMAN_RESOURCES);
+
+        EmployeePosition mockSuperiorEmployeePosition = mockEmployeePosition();
+        mockSuperiorEmployeePosition.setEmployee(mockSuperior);
+        mockSuperiorEmployeePosition.setPosition(mockPositionSuperior);
+
         doThrow(new WeakPasswordException()).when(passwordValidatorStrategy).validate(Mockito.anyString());
+        when(employeeDataProvider.findByResourceServerId(mockResourceServerSuperiorId)).thenReturn(Optional.of(mockSuperior));
+        when(employeePositionDataProvider.findAllByEmployeeId(mockSuperior.getId())).thenReturn(Set.of(mockSuperiorEmployeePosition));
 
         Exception exception = assertThrows(WeakPasswordException.class, () -> {
-            sut.execute(input);
+            sut.execute(mockResourceServerSuperiorId, input);
         });
 
         assertEquals("Weak password. Password must have at least 6 characters, one upper letter, and a special character.", exception.getMessage());
@@ -137,13 +195,26 @@ class RegisterEmployeeUsecaseTest {
 
     @Test
     void shouldThrowErrorIfPhoneIsInvalid() {
-        RegisterEmployeeInput input = mountSutInput();
+        String mockResourceServerSuperiorId = UUID.randomUUID().toString();
+        RegisterEmployeeInput input = mockSutInput();
         input.setPhone("invalid-phone");
 
+        Employee mockSuperior = mockSuperior();
+        mockSuperior.setId(1L);
+
+        Position mockPositionSuperior = mockPosition();
+        mockPositionSuperior.setName(EnterprisePosition.HUMAN_RESOURCES);
+
+        EmployeePosition mockSuperiorEmployeePosition = mockEmployeePosition();
+        mockSuperiorEmployeePosition.setEmployee(mockSuperior);
+        mockSuperiorEmployeePosition.setPosition(mockPositionSuperior);
+
         doThrow(new InvalidPhoneException()).when(phoneValidationStrategy).validate(Mockito.anyString());
+        when(employeeDataProvider.findByResourceServerId(mockResourceServerSuperiorId)).thenReturn(Optional.of(mockSuperior));
+        when(employeePositionDataProvider.findAllByEmployeeId(mockSuperior.getId())).thenReturn(Set.of(mockSuperiorEmployeePosition));
 
         Exception exception = assertThrows(InvalidPhoneException.class, () -> {
-            sut.execute(input);
+            sut.execute(mockResourceServerSuperiorId, input);
         });
 
         assertEquals("Invalid phone format.", exception.getMessage());
@@ -151,15 +222,26 @@ class RegisterEmployeeUsecaseTest {
 
     @Test
     void shouldThrowErrorIfEmailAlreadyBeingUsed() {
-        RegisterEmployeeInput input = mountSutInput();
+        String mockResourceServerSuperiorId = UUID.randomUUID().toString();
+        RegisterEmployeeInput input = mockSutInput();
         input.setEmail("already-used-email@email.com");
 
-        when(employeeDataProvider.findByEmail(Mockito.anyString())).thenReturn(
-            Optional.of(Employee.builder().build())
-        );
+        Employee mockSuperior = mockSuperior();
+        mockSuperior.setId(1L);
+
+        Position mockPositionSuperior = mockPosition();
+        mockPositionSuperior.setName(EnterprisePosition.HUMAN_RESOURCES);
+
+        EmployeePosition mockSuperiorEmployeePosition = mockEmployeePosition();
+        mockSuperiorEmployeePosition.setEmployee(mockSuperior);
+        mockSuperiorEmployeePosition.setPosition(mockPositionSuperior);
+
+        when(employeeDataProvider.findByEmail(Mockito.anyString())).thenReturn(Optional.of(Employee.builder().build()));
+        when(employeeDataProvider.findByResourceServerId(mockResourceServerSuperiorId)).thenReturn(Optional.of(mockSuperior));
+        when(employeePositionDataProvider.findAllByEmployeeId(mockSuperior.getId())).thenReturn(Set.of(mockSuperiorEmployeePosition));
 
         Exception exception = assertThrows(EmailAlreadyUsedException.class, () -> {
-            sut.execute(input);
+            sut.execute(mockResourceServerSuperiorId, input);
         });
 
         assertEquals("E-mail already being used!", exception.getMessage());
@@ -167,16 +249,27 @@ class RegisterEmployeeUsecaseTest {
 
     @Test
     void shouldThrowErrorIfFullNameAlreadyBeingUsed() {
-        RegisterEmployeeInput input = mountSutInput();
+        String mockResourceServerSuperiorId = UUID.randomUUID().toString();
+        RegisterEmployeeInput input = mockSutInput();
         input.setFirstName("test-name");
         input.setLastName("test-lastName");
 
-        when(employeeDataProvider.findByFullName(Mockito.anyString(), Mockito.anyString())).thenReturn(
-            Optional.of(Employee.builder().build())
-        );
+        Employee mockSuperior = mockSuperior();
+        mockSuperior.setId(1L);
+
+        Position mockPositionSuperior = mockPosition();
+        mockPositionSuperior.setName(EnterprisePosition.HUMAN_RESOURCES);
+
+        EmployeePosition mockSuperiorEmployeePosition = mockEmployeePosition();
+        mockSuperiorEmployeePosition.setEmployee(mockSuperior);
+        mockSuperiorEmployeePosition.setPosition(mockPositionSuperior);
+
+        when(employeeDataProvider.findByFullName(Mockito.anyString(), Mockito.anyString())).thenReturn(Optional.of(Employee.builder().build()));
+        when(employeeDataProvider.findByResourceServerId(mockResourceServerSuperiorId)).thenReturn(Optional.of(mockSuperior));
+        when(employeePositionDataProvider.findAllByEmployeeId(mockSuperior.getId())).thenReturn(Set.of(mockSuperiorEmployeePosition));
 
         Exception exception = assertThrows(FullNameAlreadyUsedException.class, () -> {
-            sut.execute(input);
+            sut.execute(mockResourceServerSuperiorId, input);
         });
 
         assertEquals("Provided first name and last name is already being used!", exception.getMessage());
@@ -185,16 +278,31 @@ class RegisterEmployeeUsecaseTest {
     @Test
     void shouldHashNewPassword() {
         String password = "123456";
-        RegisterEmployeeInput input = mountSutInput();
+        String mockResourceServerSuperiorId = UUID.randomUUID().toString();
+        RegisterEmployeeInput input = mockSutInput();
         input.setPassword(password);
 
-        when(systemRoleDataProvider.findByRole(Mockito.any())).thenReturn(Optional.of(mountRole()));
-        when(positionDataProvider.findPositionById(Mockito.any())).thenReturn(Optional.of(mountPosition()));
-        when(employeeDataProvider.save(Mockito.any())).thenReturn(mountEmployee());
+        String mockEmployeeResourceServerId = UUID.randomUUID().toString();
+        Employee mockSuperior = mockSuperior();
+        mockSuperior.setId(1L);
+
+        Position mockPositionSuperior = mockPosition();
+        mockPositionSuperior.setName(EnterprisePosition.HUMAN_RESOURCES);
+
+        EmployeePosition mockSuperiorEmployeePosition = mockEmployeePosition();
+        mockSuperiorEmployeePosition.setEmployee(mockSuperior);
+        mockSuperiorEmployeePosition.setPosition(mockPositionSuperior);
+
+        when(systemRoleDataProvider.findByRole(Mockito.any())).thenReturn(Optional.of(mockRole()));
+        when(positionDataProvider.findPositionById(Mockito.any())).thenReturn(Optional.of(mockPosition()));
+        when(employeeDataProvider.save(Mockito.any())).thenReturn(mockEmployee());
+        when(employeeKeycloakClient.registerUser(Mockito.any(), Mockito.any())).thenReturn(mockEmployeeResourceServerId);
+        when(employeeDataProvider.findByResourceServerId(mockResourceServerSuperiorId)).thenReturn(Optional.of(mockSuperior));
+        when(employeePositionDataProvider.findAllByEmployeeId(mockSuperior.getId())).thenReturn(Set.of(mockSuperiorEmployeePosition));
 
         when(passwordEncoder.encode(Mockito.any())).thenReturn("hashed-password");
 
-        sut.execute(input);
+        sut.execute(mockResourceServerSuperiorId, input);
 
         ArgumentCaptor<Employee> employeeCaptor = ArgumentCaptor.forClass(Employee.class);
 
@@ -206,14 +314,29 @@ class RegisterEmployeeUsecaseTest {
 
     @Test
     void shouldCallAndSaveNewEmployeeWithCorrectlyProvidedParams() {
-        RegisterEmployeeInput input = mountSutInput();
+        String mockResourceServerSuperiorId = UUID.randomUUID().toString();
+        RegisterEmployeeInput input = mockSutInput();
 
-        when(systemRoleDataProvider.findByRole(Mockito.any())).thenReturn(Optional.of(mountRole()));
-        when(positionDataProvider.findPositionById(Mockito.any())).thenReturn(Optional.of(mountPosition()));
-        when(employeeDataProvider.save(Mockito.any())).thenReturn(mountEmployee());
+        String mockEmployeeResourceServerId = UUID.randomUUID().toString();
+        Employee mockSuperior = mockSuperior();
+        mockSuperior.setId(1L);
+
+        Position mockPositionSuperior = mockPosition();
+        mockPositionSuperior.setName(EnterprisePosition.HUMAN_RESOURCES);
+
+        EmployeePosition mockSuperiorEmployeePosition = mockEmployeePosition();
+        mockSuperiorEmployeePosition.setEmployee(mockSuperior);
+        mockSuperiorEmployeePosition.setPosition(mockPositionSuperior);
+
+        when(systemRoleDataProvider.findByRole(Mockito.any())).thenReturn(Optional.of(mockRole()));
+        when(positionDataProvider.findPositionById(Mockito.any())).thenReturn(Optional.of(mockPosition()));
+        when(employeeDataProvider.save(Mockito.any())).thenReturn(mockEmployee());
         when(passwordEncoder.encode(Mockito.anyString())).thenReturn("hashed-password");
+        when(employeeKeycloakClient.registerUser(Mockito.any(), Mockito.any())).thenReturn(mockEmployeeResourceServerId);
+        when(employeeDataProvider.findByResourceServerId(mockResourceServerSuperiorId)).thenReturn(Optional.of(mockSuperior));
+        when(employeePositionDataProvider.findAllByEmployeeId(mockSuperior.getId())).thenReturn(Set.of(mockSuperiorEmployeePosition));
 
-        sut.execute(input);
+        sut.execute(mockResourceServerSuperiorId, input);
 
         ArgumentCaptor<Employee> argumentCaptorEmployee = ArgumentCaptor.forClass(Employee.class);
 
@@ -229,12 +352,28 @@ class RegisterEmployeeUsecaseTest {
 
     @Test
     void shouldThrowErrorIfRoleNotFound() {
-        RegisterEmployeeInput input = mountSutInput();
+        String mockResourceServerSuperiorId = UUID.randomUUID().toString();
+        RegisterEmployeeInput input = mockSutInput();
+
+        String mockEmployeeResourceServerId = UUID.randomUUID().toString();
+
+        Employee mockSuperior = mockSuperior();
+        mockSuperior.setId(1L);
+
+        Position mockPositionSuperior = mockPosition();
+        mockPositionSuperior.setName(EnterprisePosition.HUMAN_RESOURCES);
+
+        EmployeePosition mockSuperiorEmployeePosition = mockEmployeePosition();
+        mockSuperiorEmployeePosition.setEmployee(mockSuperior);
+        mockSuperiorEmployeePosition.setPosition(mockPositionSuperior);
 
         when(systemRoleDataProvider.findByRole(Mockito.any())).thenReturn(Optional.empty());
+        when(employeeKeycloakClient.registerUser(Mockito.any(), Mockito.any())).thenReturn(mockEmployeeResourceServerId);
+        when(employeeDataProvider.findByResourceServerId(mockResourceServerSuperiorId)).thenReturn(Optional.of(mockSuperior));
+        when(employeePositionDataProvider.findAllByEmployeeId(mockSuperior.getId())).thenReturn(Set.of(mockSuperiorEmployeePosition));
 
         Exception exception = assertThrows(RoleNotFoundException.class, () -> {
-            sut.execute(input);
+            sut.execute(mockResourceServerSuperiorId, input);
         });
 
         assertEquals("Role not found.", exception.getMessage());
@@ -242,13 +381,29 @@ class RegisterEmployeeUsecaseTest {
 
     @Test
     void shouldThrowErrorIfPositionNotFound() {
-        RegisterEmployeeInput input = mountSutInput();
+        String mockResourceServerSuperiorId = UUID.randomUUID().toString();
+        RegisterEmployeeInput input = mockSutInput();
 
-        when(systemRoleDataProvider.findByRole(Mockito.any())).thenReturn(Optional.of(mountRole()));
+        String mockEmployeeResourceServerId = UUID.randomUUID().toString();
+
+        Employee mockSuperior = mockSuperior();
+        mockSuperior.setId(1L);
+
+        Position mockPositionSuperior = mockPosition();
+        mockPositionSuperior.setName(EnterprisePosition.HUMAN_RESOURCES);
+
+        EmployeePosition mockSuperiorEmployeePosition = mockEmployeePosition();
+        mockSuperiorEmployeePosition.setEmployee(mockSuperior);
+        mockSuperiorEmployeePosition.setPosition(mockPositionSuperior);
+
+        when(systemRoleDataProvider.findByRole(Mockito.any())).thenReturn(Optional.of(mockRole()));
         when(positionDataProvider.findPositionById(Mockito.any())).thenReturn(Optional.empty());
+        when(employeeKeycloakClient.registerUser(Mockito.any(), Mockito.any())).thenReturn(mockEmployeeResourceServerId);
+        when(employeeDataProvider.findByResourceServerId(mockResourceServerSuperiorId)).thenReturn(Optional.of(mockSuperior));
+        when(employeePositionDataProvider.findAllByEmployeeId(mockSuperior.getId())).thenReturn(Set.of(mockSuperiorEmployeePosition));
 
         Exception exception = assertThrows(PositionNotFoundException.class, () -> {
-            sut.execute(input);
+            sut.execute(mockResourceServerSuperiorId, input);
         });
 
         assertEquals("Position not found.", exception.getMessage());
@@ -256,19 +411,35 @@ class RegisterEmployeeUsecaseTest {
 
     @Test
     void shouldSaveEmployeeRoleAsUser() {
-        SystemRole systemRole = mountRole();
+        String mockResourceServerSuperiorId = UUID.randomUUID().toString();
+        SystemRole systemRole = mockRole();
         systemRole.setRole(Role.USER);
 
-        Employee employee = mountEmployee();
+        Employee employee = mockEmployee();
         employee.setEmail("test-email");
 
+        String mockEmployeeResourceServerId = UUID.randomUUID().toString();
+
+        Employee mockSuperior = mockSuperior();
+        mockSuperior.setId(1L);
+
+        Position mockPositionSuperior = mockPosition();
+        mockPositionSuperior.setName(EnterprisePosition.HUMAN_RESOURCES);
+
+        EmployeePosition mockSuperiorEmployeePosition = mockEmployeePosition();
+        mockSuperiorEmployeePosition.setEmployee(mockSuperior);
+        mockSuperiorEmployeePosition.setPosition(mockPositionSuperior);
+
         when(systemRoleDataProvider.findByRole(Mockito.any())).thenReturn(Optional.of(systemRole));
-        when(positionDataProvider.findPositionById(Mockito.any())).thenReturn(Optional.of(mountPosition()));
+        when(positionDataProvider.findPositionById(Mockito.any())).thenReturn(Optional.of(mockPosition()));
         when(employeeDataProvider.save(Mockito.any())).thenReturn(employee);
+        when(employeeKeycloakClient.registerUser(Mockito.any(), Mockito.any())).thenReturn(mockEmployeeResourceServerId);
+        when(employeeDataProvider.findByResourceServerId(mockResourceServerSuperiorId)).thenReturn(Optional.of(mockSuperior));
+        when(employeePositionDataProvider.findAllByEmployeeId(mockSuperior.getId())).thenReturn(Set.of(mockSuperiorEmployeePosition));
 
-        RegisterEmployeeInput input = mountSutInput();
+        RegisterEmployeeInput input = mockSutInput();
 
-        sut.execute(input);
+        sut.execute(mockResourceServerSuperiorId, input);
 
         ArgumentCaptor<EmployeeSystemRole> employeeSystemRoleCaptor = ArgumentCaptor.forClass(EmployeeSystemRole.class);
 
@@ -282,19 +453,35 @@ class RegisterEmployeeUsecaseTest {
 
     @Test
     void shouldSaveEmployeePositionAsEmployee() {
-        Position position = mountPosition();
+        String mockResourceServerSuperiorId = UUID.randomUUID().toString();
+        Position position = mockPosition();
         position.setName(EnterprisePosition.EMPLOYEE);
 
-        Employee employee = mountEmployee();
+        Employee employee = mockEmployee();
         employee.setEmail("test-email");
 
+        String mockEmployeeResourceServerId = UUID.randomUUID().toString();
+
+        Employee mockSuperior = mockSuperior();
+        mockSuperior.setId(1L);
+
+        Position mockPositionSuperior = mockPosition();
+        mockPositionSuperior.setName(EnterprisePosition.HUMAN_RESOURCES);
+
+        EmployeePosition mockSuperiorEmployeePosition = mockEmployeePosition();
+        mockSuperiorEmployeePosition.setEmployee(mockSuperior);
+        mockSuperiorEmployeePosition.setPosition(mockPositionSuperior);
+
         when(positionDataProvider.findPositionById(Mockito.any())).thenReturn(Optional.of(position));
-        when(systemRoleDataProvider.findByRole(Mockito.any())).thenReturn(Optional.of(mountRole()));
+        when(systemRoleDataProvider.findByRole(Mockito.any())).thenReturn(Optional.of(mockRole()));
         when(employeeDataProvider.save(Mockito.any())).thenReturn(employee);
+        when(employeeKeycloakClient.registerUser(Mockito.any(), Mockito.any())).thenReturn(mockEmployeeResourceServerId);
+        when(employeeDataProvider.findByResourceServerId(mockResourceServerSuperiorId)).thenReturn(Optional.of(mockSuperior));
+        when(employeePositionDataProvider.findAllByEmployeeId(mockSuperior.getId())).thenReturn(Set.of(mockSuperiorEmployeePosition));
 
-        RegisterEmployeeInput input = mountSutInput();
+        RegisterEmployeeInput input = mockSutInput();
 
-        sut.execute(input);
+        sut.execute(mockResourceServerSuperiorId, input);
 
         ArgumentCaptor<EmployeePosition> employeePositionArgumentCaptor = ArgumentCaptor.forClass(EmployeePosition.class);
 
@@ -308,13 +495,29 @@ class RegisterEmployeeUsecaseTest {
 
     @Test
     void shouldPersistPersonalDataWithCorrectlyProvidedParams() {
-        RegisterEmployeeInput input = mountSutInput();
+        String mockResourceServerSuperiorId = UUID.randomUUID().toString();
+        RegisterEmployeeInput input = mockSutInput();
 
-        when(positionDataProvider.findPositionById(Mockito.any())).thenReturn(Optional.of(mountPosition()));
-        when(systemRoleDataProvider.findByRole(Mockito.any())).thenReturn(Optional.of(mountRole()));
-        when(employeeDataProvider.save(Mockito.any())).thenReturn(mountEmployee());
+        String mockEmployeeResourceServerId = UUID.randomUUID().toString();
 
-        sut.execute(input);
+        Employee mockSuperior = mockSuperior();
+        mockSuperior.setId(1L);
+
+        Position mockPositionSuperior = mockPosition();
+        mockPositionSuperior.setName(EnterprisePosition.HUMAN_RESOURCES);
+
+        EmployeePosition mockSuperiorEmployeePosition = mockEmployeePosition();
+        mockSuperiorEmployeePosition.setEmployee(mockSuperior);
+        mockSuperiorEmployeePosition.setPosition(mockPositionSuperior);
+
+        when(positionDataProvider.findPositionById(Mockito.any())).thenReturn(Optional.of(mockPosition()));
+        when(systemRoleDataProvider.findByRole(Mockito.any())).thenReturn(Optional.of(mockRole()));
+        when(employeeDataProvider.save(Mockito.any())).thenReturn(mockEmployee());
+        when(employeeKeycloakClient.registerUser(Mockito.any(), Mockito.any())).thenReturn(mockEmployeeResourceServerId);
+        when(employeeDataProvider.findByResourceServerId(mockResourceServerSuperiorId)).thenReturn(Optional.of(mockSuperior));
+        when(employeePositionDataProvider.findAllByEmployeeId(mockSuperior.getId())).thenReturn(Set.of(mockSuperiorEmployeePosition));
+
+        sut.execute(mockResourceServerSuperiorId, input);
 
         ArgumentCaptor<PersonalData> personalDataArgumentCaptor = ArgumentCaptor.forClass(PersonalData.class);
 
@@ -333,21 +536,37 @@ class RegisterEmployeeUsecaseTest {
 
     @Test
     void shouldReturnSutOutputWithoutErrors() {
-        RegisterEmployeeInput input = mountSutInput();
+        String mockResourceServerSuperiorId = UUID.randomUUID().toString();
+        RegisterEmployeeInput input = mockSutInput();
 
         Date mockCreationDate = new Date();
         Long mockId = 1L;
 
-        Employee mockEmployee = mountEmployee();
+        String mockEmployeeResourceServerId = UUID.randomUUID().toString();
+
+        Employee mockSuperior = mockSuperior();
+        mockSuperior.setId(1L);
+
+        Position mockPositionSuperior = mockPosition();
+        mockPositionSuperior.setName(EnterprisePosition.HUMAN_RESOURCES);
+
+        EmployeePosition mockSuperiorEmployeePosition = mockEmployeePosition();
+        mockSuperiorEmployeePosition.setEmployee(mockSuperior);
+        mockSuperiorEmployeePosition.setPosition(mockPositionSuperior);
+
+        Employee mockEmployee = mockEmployee();
         mockEmployee.setId(mockId);
         mockEmployee.setEmail(input.getEmail());
         mockEmployee.setCreatedAt(mockCreationDate);
 
-        when(positionDataProvider.findPositionById(Mockito.any())).thenReturn(Optional.of(mountPosition()));
-        when(systemRoleDataProvider.findByRole(Mockito.any())).thenReturn(Optional.of(mountRole()));
+        when(positionDataProvider.findPositionById(Mockito.any())).thenReturn(Optional.of(mockPosition()));
+        when(systemRoleDataProvider.findByRole(Mockito.any())).thenReturn(Optional.of(mockRole()));
         when(employeeDataProvider.save(Mockito.any())).thenReturn(mockEmployee);
+        when(employeeKeycloakClient.registerUser(Mockito.any(), Mockito.any())).thenReturn(mockEmployeeResourceServerId);
+        when(employeeDataProvider.findByResourceServerId(mockResourceServerSuperiorId)).thenReturn(Optional.of(mockSuperior));
+        when(employeePositionDataProvider.findAllByEmployeeId(mockSuperior.getId())).thenReturn(Set.of(mockSuperiorEmployeePosition));
 
-        RegisterEmployeeOutput sutOutput = sut.execute(input);
+        RegisterEmployeeOutput sutOutput = sut.execute(mockResourceServerSuperiorId, input);
 
         assertEquals(sutOutput.getEmployeeEmail(), input.getEmail());
         assertEquals(sutOutput.getEmployeeId(), mockId);

@@ -14,7 +14,7 @@ import org.springframework.web.bind.annotation.*;
 @RequestMapping("employee")
 public interface EmployeeController {
     @PostMapping("/register")
-    ResponseEntity<RegisterEmployeeOutput> registerEmployee(RegisterEmployeeInput input);
+    ResponseEntity<RegisterEmployeeOutput> registerEmployee(@AuthenticationPrincipal Jwt jwt, RegisterEmployeeInput input);
 
     @GetMapping("/list")
     ResponseEntity<ListEmployeesOutput> listEmployees(Integer page, Integer size, String name, String email, EnterprisePosition position);
