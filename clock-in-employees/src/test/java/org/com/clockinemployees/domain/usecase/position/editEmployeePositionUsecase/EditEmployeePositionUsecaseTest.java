@@ -388,7 +388,7 @@ class EditEmployeePositionUsecaseTest {
             sut.execute(mockSuperiorResourceServerId, mockEmployeeId, mockEmployeeId);
         });
 
-        assertEquals("Only CEO's and Human Resource members can handle positions!", exception.getMessage());
+        assertEquals("Only CEO's and Human Resource members or managers can handle employees!", exception.getMessage());
     }
 
     @Test

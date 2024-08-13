@@ -12,7 +12,7 @@ import java.util.Optional;
 public class EmployeeManagerDataProvider {
     private final EmployeeManagerRepository employeeManagerRepository;
 
-    public Optional<EmployeeManager> findEmployeeSuperior(Long managerId, Long employeeId) {
+    public Optional<EmployeeManager> findEmployeeManager(Long managerId, Long employeeId) {
         return employeeManagerRepository.findByManagerIdAndEmployeeId(managerId, employeeId);
     }
 }

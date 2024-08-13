@@ -9,6 +9,8 @@ import org.com.clockinemployees.domain.usecase.employee.common.exception.Employe
 import org.com.clockinemployees.domain.usecase.employee.common.exception.EmployeeSuperiorNotFoundException;
 import org.com.clockinemployees.domain.usecase.employee.disableEmployeeUsecase.dto.DisableEmployeeOutput;
 import org.com.clockinemployees.domain.usecase.position.editEmployeePositionUsecase.exception.EmployeePositionNotFoundException;
+import org.com.clockinemployees.domain.usecase.position.editEmployeePositionUsecase.exception.InsufficientPositionException;
+import org.com.clockinemployees.infra.keycloack.employee.EmployeeKeycloakClient;
 import org.com.clockinemployees.infra.providers.EmployeeDataProvider;
 import org.com.clockinemployees.infra.providers.EmployeeManagerDataProvider;
 import org.com.clockinemployees.infra.providers.EmployeePositionDataProvider;
@@ -24,6 +26,7 @@ public class DisableEmployeeUsecase {
     private final EmployeeDataProvider employeeDataProvider;
     private final EmployeeManagerDataProvider employeeManagerDataProvider;
     private final EmployeePositionDataProvider employeePositionDataProvider;
+    private final EmployeeKeycloakClient employeeKeycloakClient;
 
     public DisableEmployeeOutput execute(String superiorId, Long employeeId) {
         Employee superior = findSuperior(superiorId);
@@ -31,18 +34,19 @@ public class DisableEmployeeUsecase {
         if (Objects.nonNull(superior.getDisabledAt())) {
             throw new EmployeeSuperiorNotFoundException();
         }
-        
+
         Employee employee = findEmployee(employeeId);
 
         if (Objects.nonNull(employee.getDisabledAt())) {
             throw new EmployeeNotFoundException();
         }
 
-        handleSuperiorBeingHumanResources(superior, employee);
+        handleSuperiorPermissions(superior, employee);
 
         employee.setDisabledAt(new Date());
 
         Employee disabledEmployee = persistEmployeeDisabled(employee);
+        disableUserResourceServer(disabledEmployee.getKeycloakId());
 
         return mountOutput(disabledEmployee, superior.getId());
     }
@@ -55,21 +59,28 @@ public class DisableEmployeeUsecase {
         return employeeDataProvider.findById(employeeId).orElseThrow(EmployeeNotFoundException::new);
     }
 
-    private void handleSuperiorBeingHumanResources(Employee superior, Employee employee) {
-        EmployeePosition superiorHumanResources = getSuperiorPosition(superior.getId());
+    private void handleSuperiorPermissions(Employee superior, Employee employee) {
+        EmployeePosition superiorPosition = getSuperiorPosition(superior.getId());
 
-        if (superiorHumanResources.getPosition().getName().equals(EnterprisePosition.HUMAN_RESOURCES) || superiorHumanResources.getPosition().getName().equals(EnterprisePosition.CEO))
-            return;
+        if (!superiorPosition.getPosition().getName().equals(EnterprisePosition.HUMAN_RESOURCES) && !superiorPosition.getPosition().getName().equals(EnterprisePosition.CEO)) {
+            if (superiorPosition.getPosition().getName().equals(EnterprisePosition.EMPLOYEE)) {
+                throw new InsufficientPositionException(false);
+            }
 
-        checkEmployeeSuperior(superior.getId(), employee.getId());
+            checkEmployeeManager(superior.getId(), employee.getId());
+        }
     }
 
-    private void checkEmployeeSuperior(Long superiorId, Long employeeId) {
-        employeeManagerDataProvider.findEmployeeSuperior(superiorId, employeeId).orElseThrow(EmployeeSuperiorNotFoundException::new);
+    private void checkEmployeeManager(Long managerId, Long employeeId) {
+        employeeManagerDataProvider.findEmployeeManager(managerId, employeeId).orElseThrow(EmployeeSuperiorNotFoundException::new);
     }
 
     private EmployeePosition getSuperiorPosition(Long superiorId) {
         return employeePositionDataProvider.findByEmployeeId(superiorId).orElseThrow(EmployeePositionNotFoundException::new);
+    }
+
+    private void disableUserResourceServer(String userResourceServerId) {
+        employeeKeycloakClient.handleUserEnabled(userResourceServerId, false);
     }
 
     private Employee persistEmployeeDisabled(Employee employee) {

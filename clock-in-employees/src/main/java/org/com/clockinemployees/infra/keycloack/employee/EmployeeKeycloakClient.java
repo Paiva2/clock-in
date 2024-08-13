@@ -68,13 +68,8 @@ public class EmployeeKeycloakClient {
 
     public void updateUserRoles(Employee employee, Position position, Position oldPosition) {
         RealmResource kcRealmResource = getInstance();
-        UsersResource kcUsers = kcRealmResource.users();
 
-        UserResource user = kcUsers.get(employee.getKeycloakId());
-
-        if (Objects.isNull(user)) {
-            throw new UserResourceNotFoundException(employee.getKeycloakId());
-        }
+        UserResource user = getUserById(employee.getKeycloakId(), kcRealmResource);
 
         String oldUserRole = rolesMapper.get(oldPosition.getName()).roleName();
         String userRole = rolesMapper.get(position.getName()).roleName();
@@ -84,6 +79,28 @@ public class EmployeeKeycloakClient {
 
         RoleRepresentation userRealmRoleToRemove = kcRealmResource.roles().get(oldUserRole).toRepresentation();
         user.roles().realmLevel().remove(List.of(userRealmRoleToRemove));
+    }
+
+    public void handleUserEnabled(String userId, Boolean enabled) {
+        RealmResource kcRealmResource = getInstance();
+        UserResource user = getUserById(userId, kcRealmResource);
+
+        UserRepresentation userRepresentation = user.toRepresentation();
+        userRepresentation.setEnabled(enabled);
+
+        user.update(userRepresentation);
+    }
+
+    private UserResource getUserById(String userId, RealmResource realmResource) {
+        UsersResource kcUsers = realmResource.users();
+
+        UserResource user = kcUsers.get(userId);
+
+        if (Objects.isNull(user)) {
+            throw new UserResourceNotFoundException(userId);
+        }
+
+        return user;
     }
 
     private UserRepresentation mountUserRepresentation(RegisterEmployeeInput employeeInput, String rawPassword) {
