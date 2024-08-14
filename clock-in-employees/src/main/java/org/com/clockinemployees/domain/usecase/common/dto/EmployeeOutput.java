@@ -1,5 +1,6 @@
 package org.com.clockinemployees.domain.usecase.common.dto;
 
+import com.fasterxml.jackson.annotation.JsonInclude;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -17,7 +18,11 @@ public class EmployeeOutput {
     private String lastName;
     private String email;
     private String profilePictureUrl;
+    @JsonInclude(JsonInclude.Include.NON_NULL)
     private List<EnterprisePosition> enterprisePosition;
+    @JsonInclude(JsonInclude.Include.NON_NULL)
+    private List<ManagerOutput> managers;
+    @JsonInclude(JsonInclude.Include.NON_NULL)
     private PersonalDataOutput personalDataOutput;
 
     public static EmployeeOutput toDto(Employee employee) {
@@ -27,6 +32,7 @@ public class EmployeeOutput {
             .lastName(employee.getLastName())
             .email(employee.getEmail())
             .profilePictureUrl(employee.getProfilePictureUrl())
+            .managers(employee.getEmployeeManagers().stream().map(ManagerOutput::toDto).toList())
             .enterprisePosition(employee.getEmployeePositions().stream().map(position -> position.getPosition().getName()).toList())
             .personalDataOutput(PersonalDataOutput.toDto(employee.getPersonalData()))
             .build();

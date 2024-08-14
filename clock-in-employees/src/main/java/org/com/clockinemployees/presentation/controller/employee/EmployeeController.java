@@ -22,8 +22,8 @@ public interface EmployeeController {
     @GetMapping("/list")
     ResponseEntity<ListEmployeesOutput> listEmployees(Integer page, Integer size, String name, String email, EnterprisePosition position);
 
-    @GetMapping("/userinfo")
-    ResponseEntity<String> userinfo(Jwt jwt);
+    @GetMapping("/me")
+    ResponseEntity<EmployeeOutput> me(@AuthenticationPrincipal Jwt jwt);
 
     @PutMapping("/disable/{employeeId}")
     ResponseEntity<DisableEmployeeOutput> disableEmployee(@AuthenticationPrincipal Jwt jwt, @PathVariable("employeeId") Long employeeId);

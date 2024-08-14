@@ -8,6 +8,7 @@ import org.com.clockinemployees.domain.usecase.employee.disableEmployeeUsecase.D
 import org.com.clockinemployees.domain.usecase.employee.disableEmployeeUsecase.dto.DisableEmployeeOutput;
 import org.com.clockinemployees.domain.usecase.employee.editEmployeeProfileUsecase.EditEmployeeProfileUsecase;
 import org.com.clockinemployees.domain.usecase.employee.editEmployeeProfileUsecase.dto.EditEmployeeProfileInput;
+import org.com.clockinemployees.domain.usecase.employee.getEmployeeProfileUsecase.GetEmployeeProfileUsecase;
 import org.com.clockinemployees.domain.usecase.employee.listEmployees.ListEmployeesUsecase;
 import org.com.clockinemployees.domain.usecase.employee.listEmployees.dto.ListEmployeesInput;
 import org.com.clockinemployees.domain.usecase.employee.listEmployees.dto.ListEmployeesOutput;
@@ -30,6 +31,7 @@ public class EmployeeControllerImpl implements EmployeeController {
     private final ListEmployeesUsecase listEmployeesUsecase;
     private final DisableEmployeeUsecase disableEmployeeUsecase;
     private final EditEmployeeProfileUsecase editEmployeeProfileUsecase;
+    private final GetEmployeeProfileUsecase getEmployeeProfileUsecase;
 
     @Override
     public ResponseEntity<RegisterEmployeeOutput> registerEmployee(
@@ -79,9 +81,10 @@ public class EmployeeControllerImpl implements EmployeeController {
     }
 
     @Override
-    public ResponseEntity<String> userinfo(
+    public ResponseEntity<EmployeeOutput> me(
         @AuthenticationPrincipal Jwt jwt
     ) {
-        return new ResponseEntity<>("Sub id: " + jwt.getSubject(), HttpStatus.OK);
+        EmployeeOutput output = getEmployeeProfileUsecase.execute(jwt.getSubject());
+        return new ResponseEntity<>(output, HttpStatus.OK);
     }
 }
