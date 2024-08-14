@@ -4,19 +4,21 @@ import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotEmpty;
 import jakarta.validation.constraints.Pattern;
 import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
 @AllArgsConstructor
 @NoArgsConstructor
 @Data
+@Builder
 public class EditEmployeeProfileInput {
     @NotBlank
     private String firstName;
 
     @NotBlank
     private String lastName;
-    
+
     private String password;
 
     private String profilePictureUrl;
