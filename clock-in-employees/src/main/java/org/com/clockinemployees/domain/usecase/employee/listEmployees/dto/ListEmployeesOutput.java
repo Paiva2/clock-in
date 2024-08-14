@@ -4,7 +4,7 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import org.com.clockinemployees.domain.usecase.employee.common.dto.EmployeeOutput;
+import org.com.clockinemployees.domain.usecase.common.dto.EmployeeOutput;
 
 import java.util.List;
 

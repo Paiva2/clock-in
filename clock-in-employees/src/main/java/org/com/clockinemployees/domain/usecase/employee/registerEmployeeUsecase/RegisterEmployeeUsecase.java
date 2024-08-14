@@ -8,7 +8,7 @@ import org.com.clockinemployees.domain.enums.EnterprisePosition;
 import org.com.clockinemployees.domain.enums.Role;
 import org.com.clockinemployees.domain.strategy.passwordValidator.PasswordValidatorStrategy;
 import org.com.clockinemployees.domain.strategy.phoneValidation.PhoneValidationStrategy;
-import org.com.clockinemployees.domain.usecase.employee.common.exception.PositionNotFoundException;
+import org.com.clockinemployees.domain.usecase.common.exception.PositionNotFoundException;
 import org.com.clockinemployees.domain.usecase.employee.registerEmployeeUsecase.dto.RegisterEmployeeInput;
 import org.com.clockinemployees.domain.usecase.employee.registerEmployeeUsecase.dto.RegisterEmployeeOutput;
 import org.com.clockinemployees.domain.usecase.employee.registerEmployeeUsecase.exception.*;
@@ -69,7 +69,7 @@ public class RegisterEmployeeUsecase {
         Employee superior = findSuperior(superiorResourceServerId);
 
         Set<EmployeePosition> superiorPosition = employeePositionDataProvider.findAllByEmployeeId(superior.getId());
-        
+
         superiorPosition.stream().filter(sp ->
                 sp.getPosition().getName().equals(EnterprisePosition.HUMAN_RESOURCES) ||
                     sp.getPosition().getName().equals(EnterprisePosition.CEO))

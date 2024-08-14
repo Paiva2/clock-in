@@ -3,7 +3,7 @@ package org.com.clockinemployees.domain.usecase.position.listPositionsUsecase.dt
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
-import org.com.clockinemployees.domain.usecase.position.common.dto.PositionOutput;
+import org.com.clockinemployees.domain.usecase.common.dto.PositionOutput;
 
 import java.util.List;
 

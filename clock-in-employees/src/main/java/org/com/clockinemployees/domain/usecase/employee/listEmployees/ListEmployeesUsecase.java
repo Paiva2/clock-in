@@ -3,7 +3,7 @@ package org.com.clockinemployees.domain.usecase.employee.listEmployees;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import org.com.clockinemployees.domain.entity.Employee;
-import org.com.clockinemployees.domain.usecase.employee.common.dto.EmployeeOutput;
+import org.com.clockinemployees.domain.usecase.common.dto.EmployeeOutput;
 import org.com.clockinemployees.domain.usecase.employee.listEmployees.dto.ListEmployeesInput;
 import org.com.clockinemployees.domain.usecase.employee.listEmployees.dto.ListEmployeesOutput;
 import org.com.clockinemployees.infra.providers.EmployeeDataProvider;

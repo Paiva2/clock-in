@@ -1,4 +1,4 @@
-package org.com.clockinemployees.domain.usecase.employee.common.dto;
+package org.com.clockinemployees.domain.usecase.common.dto;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;

@@ -5,7 +5,7 @@ import org.com.clockinemployees.domain.entity.Employee;
 import org.com.clockinemployees.domain.entity.EmployeePosition;
 import org.com.clockinemployees.domain.entity.Position;
 import org.com.clockinemployees.domain.enums.EnterprisePosition;
-import org.com.clockinemployees.domain.usecase.employee.common.exception.EmployeeNotFoundException;
+import org.com.clockinemployees.domain.usecase.common.exception.EmployeeNotFoundException;
 import org.com.clockinemployees.domain.usecase.position.listPositionsUsecase.dto.ListPositionsInput;
 import org.com.clockinemployees.domain.usecase.position.listPositionsUsecase.dto.ListPositionsOutput;
 import org.com.clockinemployees.domain.usecase.position.listPositionsUsecase.exception.InsufficientPermissionPositionListException;
