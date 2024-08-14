@@ -18,6 +18,6 @@ $$ language 'plpgsql';
 CREATE TRIGGER update_updated_at_tb_employees_managers
     BEFORE UPDATE
     ON
-        "clock-in-db".public.TB_PERSONAL_DATAS
+        "clock-in-db".public.TB_EMPLOYEES_MANAGERS
     FOR EACH ROW
 EXECUTE PROCEDURE update_updated_at_tb_employees_managers();
