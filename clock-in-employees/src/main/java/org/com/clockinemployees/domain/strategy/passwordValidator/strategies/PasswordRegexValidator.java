@@ -9,11 +9,11 @@ import java.util.regex.Pattern;
 
 @Component
 public class PasswordRegexValidator implements PasswordValidatorStrategy {
-    private static final String PASSWORD_STRENGHT_REGEX = "^(?=.*[0-9])(?=.*[a-z])(?=.*[A-Z])(?=.*[@#$%^&+=])(?=\\S+$).{6,}$";
-    
+    private static final String PASSWORD_STRENGTH_REGEX = "^(?=.*[0-9])(?=.*[a-z])(?=.*[A-Z])(?=.*[@#$%^&+=])(?=\\S+$).{6,}$";
+
     @Override
     public void validate(String password) {
-        Pattern passwordPattern = Pattern.compile(PASSWORD_STRENGHT_REGEX, Pattern.CASE_INSENSITIVE);
+        Pattern passwordPattern = Pattern.compile(PASSWORD_STRENGTH_REGEX);
         Matcher passwordMatcher = passwordPattern.matcher(password);
 
         if (!passwordMatcher.matches()) {
