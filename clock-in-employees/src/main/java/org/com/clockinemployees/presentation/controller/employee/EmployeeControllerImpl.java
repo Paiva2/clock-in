@@ -3,8 +3,11 @@ package org.com.clockinemployees.presentation.controller.employee;
 import jakarta.validation.Valid;
 import lombok.AllArgsConstructor;
 import org.com.clockinemployees.domain.enums.EnterprisePosition;
+import org.com.clockinemployees.domain.usecase.common.dto.EmployeeOutput;
 import org.com.clockinemployees.domain.usecase.employee.disableEmployeeUsecase.DisableEmployeeUsecase;
 import org.com.clockinemployees.domain.usecase.employee.disableEmployeeUsecase.dto.DisableEmployeeOutput;
+import org.com.clockinemployees.domain.usecase.employee.editEmployeeProfileUsecase.EditEmployeeProfileUsecase;
+import org.com.clockinemployees.domain.usecase.employee.editEmployeeProfileUsecase.dto.EditEmployeeProfileInput;
 import org.com.clockinemployees.domain.usecase.employee.listEmployees.ListEmployeesUsecase;
 import org.com.clockinemployees.domain.usecase.employee.listEmployees.dto.ListEmployeesInput;
 import org.com.clockinemployees.domain.usecase.employee.listEmployees.dto.ListEmployeesOutput;
@@ -26,6 +29,7 @@ public class EmployeeControllerImpl implements EmployeeController {
     private final RegisterEmployeeUsecase registerEmployeeUsecase;
     private final ListEmployeesUsecase listEmployeesUsecase;
     private final DisableEmployeeUsecase disableEmployeeUsecase;
+    private final EditEmployeeProfileUsecase editEmployeeProfileUsecase;
 
     @Override
     public ResponseEntity<RegisterEmployeeOutput> registerEmployee(
@@ -62,6 +66,15 @@ public class EmployeeControllerImpl implements EmployeeController {
         @PathVariable("employeeId") Long employeeId
     ) {
         DisableEmployeeOutput output = disableEmployeeUsecase.execute(jwt.getSubject(), employeeId);
+        return new ResponseEntity<>(output, HttpStatus.OK);
+    }
+
+    @Override
+    public ResponseEntity<EmployeeOutput> updateProfile(
+        @AuthenticationPrincipal Jwt jwt,
+        @RequestBody @Valid EditEmployeeProfileInput input
+    ) {
+        EmployeeOutput output = editEmployeeProfileUsecase.execute(jwt.getSubject(), input);
         return new ResponseEntity<>(output, HttpStatus.OK);
     }
 

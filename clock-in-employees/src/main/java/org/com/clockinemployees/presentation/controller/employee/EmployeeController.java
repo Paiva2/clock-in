@@ -1,7 +1,10 @@
 package org.com.clockinemployees.presentation.controller.employee;
 
+import jakarta.validation.Valid;
 import org.com.clockinemployees.domain.enums.EnterprisePosition;
+import org.com.clockinemployees.domain.usecase.common.dto.EmployeeOutput;
 import org.com.clockinemployees.domain.usecase.employee.disableEmployeeUsecase.dto.DisableEmployeeOutput;
+import org.com.clockinemployees.domain.usecase.employee.editEmployeeProfileUsecase.dto.EditEmployeeProfileInput;
 import org.com.clockinemployees.domain.usecase.employee.listEmployees.dto.ListEmployeesOutput;
 import org.com.clockinemployees.domain.usecase.employee.registerEmployeeUsecase.dto.RegisterEmployeeInput;
 import org.com.clockinemployees.domain.usecase.employee.registerEmployeeUsecase.dto.RegisterEmployeeOutput;
@@ -24,4 +27,8 @@ public interface EmployeeController {
 
     @PutMapping("/disable/{employeeId}")
     ResponseEntity<DisableEmployeeOutput> disableEmployee(@AuthenticationPrincipal Jwt jwt, @PathVariable("employeeId") Long employeeId);
+
+    @PutMapping("/update/profile")
+    ResponseEntity<EmployeeOutput> updateProfile(@AuthenticationPrincipal Jwt jwt, @RequestBody @Valid EditEmployeeProfileInput input);
+
 }

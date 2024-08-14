@@ -91,6 +91,22 @@ public class EmployeeKeycloakClient {
         user.update(userRepresentation);
     }
 
+    public void updateEmployee(Employee employee, String rawPassword) {
+        RealmResource kcRealmResource = getInstance();
+        UserResource user = getUserById(employee.getKeycloakId(), kcRealmResource);
+
+        UserRepresentation userRepresentation = user.toRepresentation();
+        userRepresentation.setFirstName(employee.getFirstName());
+        userRepresentation.setLastName(employee.getLastName());
+
+        if (Objects.nonNull(rawPassword)) {
+            CredentialRepresentation credentialRepresentation = createUserPasswordCredentials(rawPassword);
+            userRepresentation.setCredentials(Collections.singletonList(credentialRepresentation));
+        }
+        
+        user.update(userRepresentation);
+    }
+
     private UserResource getUserById(String userId, RealmResource realmResource) {
         UsersResource kcUsers = realmResource.users();
 

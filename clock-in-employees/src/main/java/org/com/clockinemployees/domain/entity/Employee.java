@@ -50,7 +50,7 @@ public class Employee {
     @Column(name = "EM_DISABLED_AT", nullable = true)
     private Date disabledAt;
 
-    @OneToOne(mappedBy = "employee")
+    @OneToOne(mappedBy = "employee", fetch = FetchType.LAZY)
     private PersonalData personalData;
 
     @OneToMany(mappedBy = "employee", fetch = FetchType.LAZY)
