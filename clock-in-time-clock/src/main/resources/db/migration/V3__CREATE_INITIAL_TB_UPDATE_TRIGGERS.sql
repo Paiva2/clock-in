@@ -15,22 +15,7 @@ CREATE TRIGGER update_time_clocks_task_updated_on
 EXECUTE PROCEDURE update_updated_at_tb_time_clocks();
 
 --
-CREATE  FUNCTION update_updated_at_tb_employee_ids()
-    RETURNS TRIGGER AS $$
-BEGIN
-    NEW.EI_UPDATED_AT = now();
-    RETURN NEW;
-END;
-$$ language 'plpgsql';
 
-CREATE TRIGGER update_employee_ids_task_updated_on
-    BEFORE UPDATE
-    ON
-        "clock-in-db".public2.TB_EMPLOYEE_IDS
-    FOR EACH ROW
-EXECUTE PROCEDURE update_updated_at_tb_employee_ids();
-
---
 CREATE  FUNCTION update_updated_at_tb_pending_update_approvals()
     RETURNS TRIGGER AS $$
 BEGIN

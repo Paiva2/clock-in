@@ -24,9 +24,8 @@ public class TimeClock {
     @Column(name = "TC_TIME_CLOCKED", nullable = false)
     private Date timeClocked;
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "TC_EMPLOYEE_ID", nullable = false)
-    private EmployeeId employeeId;
+    @Column(name = "TC_EXTERNAL_EMPLOYEE_ID", nullable = false)
+    private Long externalEmployeeId;
 
     @CreationTimestamp
     @Column(name = "TC_CREATED_AT_ID")
