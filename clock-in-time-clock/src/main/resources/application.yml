@@ -16,6 +16,7 @@ spring:
         jdbc:
           batch_size: 50
         order_inserts: true
+        default_schema: public2
   security:
     oauth2:
       resourceserver:
@@ -23,6 +24,11 @@ spring:
           issuer-uri: ${KEYCLOAK_ISSUER_URL}
   flyway:
     schemas: public2
+  rabbitmq:
+    host: ${RABBITMQ_HOST}
+    port: ${RABBITMQ_PORT}
+    username: ${RABBITMQ_USERNAME}
+    password: ${RABBITMQ_PASSWORD}
 
 server:
   port: 9002
@@ -30,12 +36,15 @@ server:
     include-message: always
     include-stacktrace: never
 
+gateway:
+  url: http://localhost:9000
+
 logging:
   level:
     root: WARN
     org:
       springframework:
-        web: DEBUG
+        web: info
       hibernate: ERROR
 
 keycloak:
@@ -47,5 +56,7 @@ keycloak:
   username_admin: ${KEYCLOAK_USERNAME_ADMIN}
   password_admin: ${KEYCLOAK_PASSWORD_ADMIN}
 
-
+rabbit:
+  queue:
+    time-clock: time_clock_queue
 
