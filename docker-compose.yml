@@ -10,6 +10,15 @@ services:
       - POSTGRES_USER=development
       - POSTGRES_PASSWORD=development
       - POSTGRES_DB=clock-in-db
+  rabbitmq:
+    container_name: "rabbitmq_clock-in"
+    image: 'rabbitmq:3.13-alpine'
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+    environment:
+      - RABBIT_USER=development
+      - RABBIT_PASSWORD=development
   keycloack:
     container_name: "keycloack_clock-in"
     image: "codingpuss/keycloak-silicon:16.1.1"

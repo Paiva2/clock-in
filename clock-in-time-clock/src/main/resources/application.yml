@@ -1,15 +1,13 @@
 spring:
   application:
-    name: clock-in-employees
+    name: clock-in-time-clock
   datasource:
     url: ${DATABASE_URL}
     username: ${DATABASE_USERNAME}
     password: ${DATABASE_PASSWORD}
-  flyway:
-    schemas: public
   jpa:
     hibernate:
-      ddl-auto: update
+      ddl-auto: none
     show-sql: false
     properties:
       hibernate:
@@ -23,10 +21,11 @@ spring:
       resourceserver:
         jwt:
           issuer-uri: ${KEYCLOAK_ISSUER_URL}
-
+  flyway:
+    schemas: public2
 
 server:
-  port: 9001
+  port: 9002
   error:
     include-message: always
     include-stacktrace: never
@@ -47,3 +46,6 @@ keycloak:
   client_secret: ${KEYCLOAK_CLIENT_SECRET}
   username_admin: ${KEYCLOAK_USERNAME_ADMIN}
   password_admin: ${KEYCLOAK_PASSWORD_ADMIN}
+
+
+

@@ -18,6 +18,7 @@ public class ClockInGatewayApplication {
     public RouteLocator routeLocator(RouteLocatorBuilder builder) {
         return builder.routes()
             .route(route -> route.path("/employee/**").uri("lb://CLOCK-IN-EMPLOYEES"))
+            .route(route -> route.path("/time-clock/**").uri("lb://CLOCK-IN-TIME-CLOCK"))
             .build();
     }
 }

@@ -1,0 +1,4 @@
+CREATE SCHEMA IF NOT EXISTS public2;
+SET SCHEMA 'public2';
+CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
+SET TIMEZONE TO 'America/Sao_Paulo';
