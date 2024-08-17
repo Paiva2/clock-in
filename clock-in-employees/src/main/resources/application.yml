@@ -23,12 +23,6 @@ spring:
       resourceserver:
         jwt:
           issuer-uri: ${KEYCLOAK_ISSUER_URL}
-  rabbitmq:
-    host: ${RABBITMQ_HOST}
-    port: ${RABBITMQ_PORT}
-    username: ${RABBITMQ_USERNAME}
-    password: ${RABBITMQ_PASSWORD}
-
 
 server:
   port: 9001
@@ -52,7 +46,3 @@ keycloak:
   client_secret: ${KEYCLOAK_CLIENT_SECRET}
   username_admin: ${KEYCLOAK_USERNAME_ADMIN}
   password_admin: ${KEYCLOAK_PASSWORD_ADMIN}
-
-rabbit:
-  queue:
-    time-clock: time_clock_queue

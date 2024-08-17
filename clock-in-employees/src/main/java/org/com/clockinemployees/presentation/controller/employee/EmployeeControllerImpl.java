@@ -81,7 +81,7 @@ public class EmployeeControllerImpl implements EmployeeController {
     }
 
     @Override
-    public ResponseEntity<EmployeeOutput> me(
+    public ResponseEntity<EmployeeOutput> info(
         @AuthenticationPrincipal Jwt jwt
     ) {
         EmployeeOutput output = getEmployeeProfileUsecase.execute(jwt.getSubject());

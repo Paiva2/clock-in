@@ -28,13 +28,10 @@ public class TimeClock {
     private Long externalEmployeeId;
 
     @CreationTimestamp
-    @Column(name = "TC_CREATED_AT_ID")
+    @Column(name = "TC_CREATED_AT")
     private Date createdAt;
 
     @UpdateTimestamp
-    @Column(name = "TC_UPDATED_AT_ID")
+    @Column(name = "TC_UPDATED_AT")
     private Date updatedAt;
-
-    @OneToOne(fetch = FetchType.LAZY)
-    private PendingUpdateApproval pendingUpdateApproval;
 }

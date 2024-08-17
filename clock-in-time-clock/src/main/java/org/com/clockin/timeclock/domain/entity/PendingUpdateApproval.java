@@ -21,8 +21,8 @@ public class PendingUpdateApproval {
     @Column(name = "PUA_ID")
     private UUID id;
 
-    @OneToOne(mappedBy = "pendingUpdateApproval")
-    @JoinColumn(name = "PUA_TIME_CLOCK", nullable = false)
+    @OneToOne
+    @JoinColumn(name = "PUA_TIME_CLOCK_ID", nullable = false)
     private TimeClock timeClock;
 
     @Column(name = "PUA_TIME_CLOCK_UPDATED", nullable = false)

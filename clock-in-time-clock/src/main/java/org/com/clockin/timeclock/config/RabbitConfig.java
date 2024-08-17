@@ -20,15 +20,4 @@ public class RabbitConfig {
     public Queue timeClockQueue() {
         return new Queue(timeClockQueue, false);
     }
-
-    public Jackson2JsonMessageConverter messageConverter() {
-        return new Jackson2JsonMessageConverter();
-    }
-
-    @Bean
-    public AmqpTemplate amqpTemplate(ConnectionFactory connectionFactory) {
-        final RabbitTemplate template = new RabbitTemplate(connectionFactory);
-        template.setMessageConverter(messageConverter());
-        return template;
-    }
 }

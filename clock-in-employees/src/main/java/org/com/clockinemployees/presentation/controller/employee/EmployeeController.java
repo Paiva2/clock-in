@@ -22,13 +22,12 @@ public interface EmployeeController {
     @GetMapping("/list")
     ResponseEntity<ListEmployeesOutput> listEmployees(Integer page, Integer size, String name, String email, EnterprisePosition position);
 
-    @GetMapping("/me")
-    ResponseEntity<EmployeeOutput> me(@AuthenticationPrincipal Jwt jwt);
+    @GetMapping("/info")
+    ResponseEntity<EmployeeOutput> info(@AuthenticationPrincipal Jwt jwt);
 
     @PutMapping("/disable/{employeeId}")
     ResponseEntity<DisableEmployeeOutput> disableEmployee(@AuthenticationPrincipal Jwt jwt, @PathVariable("employeeId") Long employeeId);
 
     @PutMapping("/update/profile")
     ResponseEntity<EmployeeOutput> updateProfile(@AuthenticationPrincipal Jwt jwt, @RequestBody @Valid EditEmployeeProfileInput input);
-
 }
