@@ -10,6 +10,7 @@ import org.com.clockin.timeclock.domain.usecase.timeClock.registerTimeClockUseca
 import org.com.clockin.timeclock.infra.dataProvider.TimeClockDataProvider;
 import org.com.clockin.timeclock.infra.dataProvider.external.EmployeeDataProvider;
 import org.com.clockin.timeclock.infra.publishers.TimeClockPublisher;
+import org.com.clockin.timeclock.infra.publishers.dto.PublishNewTimeClockedInput;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 
@@ -28,9 +29,15 @@ public class RegisterTimeClockUsecase {
 
         checkTimeClocksToday(employee);
 
-        publishTimeClock(employee.getId());
+        Date timeClocked = new Date();
 
-        return mountOutput(employee.getId());
+        publishTimeClock(PublishNewTimeClockedInput.builder()
+            .employeeId(employee.getId())
+            .timeClocked(timeClocked)
+            .build()
+        );
+
+        return mountOutput(employee.getId(), timeClocked);
     }
 
     private Employee findEmployee(String externalAuthorization) {
@@ -41,9 +48,9 @@ public class RegisterTimeClockUsecase {
         } catch (FeignException exception) {
             if (exception.status() == HttpStatus.NOT_FOUND.value()) {
                 throw new EmployeeNotFoundException("Error while searching for Employee, resource not found!");
+            } else {
+                throw new RuntimeException(exception.getMessage());
             }
-        } catch (Exception exception) {
-            throw new RuntimeException(exception.getMessage());
         }
 
         return employee;
@@ -57,18 +64,18 @@ public class RegisterTimeClockUsecase {
         }
     }
 
-    private void publishTimeClock(Long employeeId) {
-        timeClockPublisher.publishNewTimeClocked(employeeId);
+    private void publishTimeClock(PublishNewTimeClockedInput input) {
+        timeClockPublisher.publishNewTimeClocked(input);
     }
 
     private Integer timeClockedQuantityToday(Long employeeId) {
         return timeClockDataProvider.findTimeClocksCountTodayForEmployee(employeeId);
     }
 
-    private RegisterTimeClockOutput mountOutput(Long externalEmployeeId) {
+    private RegisterTimeClockOutput mountOutput(Long externalEmployeeId, Date timeClocked) {
         return RegisterTimeClockOutput.builder()
             .employeeId(externalEmployeeId)
-            .timeClocked(new Date())
+            .timeClocked(timeClocked)
             .build();
     }
 }
