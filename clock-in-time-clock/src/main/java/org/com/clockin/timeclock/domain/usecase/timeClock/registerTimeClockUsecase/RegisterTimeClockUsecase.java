@@ -6,7 +6,6 @@ import lombok.Builder;
 import org.com.clockin.timeclock.domain.entity.external.Employee;
 import org.com.clockin.timeclock.domain.usecase.timeClock.registerTimeClockUsecase.dto.RegisterTimeClockOutput;
 import org.com.clockin.timeclock.domain.usecase.timeClock.registerTimeClockUsecase.exception.EmployeeNotFoundException;
-import org.com.clockin.timeclock.domain.usecase.timeClock.registerTimeClockUsecase.exception.MaxTimeClockedExceptionForDay;
 import org.com.clockin.timeclock.infra.dataProvider.TimeClockDataProvider;
 import org.com.clockin.timeclock.infra.dataProvider.external.EmployeeDataProvider;
 import org.com.clockin.timeclock.infra.publishers.TimeClockPublisher;
@@ -26,8 +25,6 @@ public class RegisterTimeClockUsecase {
 
     public RegisterTimeClockOutput execute(String externalAuthorization) {
         Employee employee = findEmployee(externalAuthorization);
-
-        checkTimeClocksToday(employee);
 
         Date timeClocked = new Date();
 
@@ -56,22 +53,10 @@ public class RegisterTimeClockUsecase {
         return employee;
     }
 
-    private void checkTimeClocksToday(Employee employee) {
-        Integer quantityClockedToday = timeClockedQuantityToday(employee.getId());
-
-        if (quantityClockedToday >= 4) {
-            throw new MaxTimeClockedExceptionForDay();
-        }
-    }
-
     private void publishTimeClock(PublishNewTimeClockedInput input) {
         timeClockPublisher.publishNewTimeClocked(input);
     }
-
-    private Integer timeClockedQuantityToday(Long employeeId) {
-        return timeClockDataProvider.findTimeClocksCountTodayForEmployee(employeeId);
-    }
-
+    
     private RegisterTimeClockOutput mountOutput(Long externalEmployeeId, Date timeClocked) {
         return RegisterTimeClockOutput.builder()
             .employeeId(externalEmployeeId)

@@ -3,7 +3,6 @@ package org.com.clockin.timeclock.domain.usecase.timeClock.registerTimeClockUsec
 import org.com.clockin.timeclock.domain.entity.external.Employee;
 import org.com.clockin.timeclock.domain.usecase.timeClock.registerTimeClockUsecase.dto.RegisterTimeClockOutput;
 import org.com.clockin.timeclock.domain.usecase.timeClock.registerTimeClockUsecase.exception.EmployeeNotFoundException;
-import org.com.clockin.timeclock.domain.usecase.timeClock.registerTimeClockUsecase.exception.MaxTimeClockedExceptionForDay;
 import org.com.clockin.timeclock.infra.dataProvider.TimeClockDataProvider;
 import org.com.clockin.timeclock.infra.dataProvider.external.EmployeeDataProvider;
 import org.com.clockin.timeclock.infra.publishers.TimeClockPublisher;
@@ -64,49 +63,12 @@ class RegisterTimeClockUsecaseTest {
     }
 
     @Test
-    void shouldCheckForTimeClockedOnDay() {
-        String externalId = "any_id";
-
-        Employee mockEmployee = mockEmployee();
-        mockEmployee.setId(1L);
-
-        when(timeClockDataProvider.findTimeClocksCountTodayForEmployee(any())).thenReturn(0);
-        when(employeeDataProvider.findEmployeeByResourceServerId(any())).thenReturn(new ResponseEntity<>(mockEmployee, HttpStatus.OK));
-
-        sut.execute(externalId);
-
-        ArgumentCaptor<Long> externalEmployeeIdCaptor = ArgumentCaptor.forClass(Long.class);
-
-        verify(timeClockDataProvider, times(1)).findTimeClocksCountTodayForEmployee(externalEmployeeIdCaptor.capture());
-
-        assertEquals(mockEmployee.getId(), externalEmployeeIdCaptor.getValue());
-    }
-
-    @Test
-    void shouldThrowExceptionIfUserClockedFourTimesToday() {
-        String externalId = "any_id";
-
-        Employee mockEmployee = mockEmployee();
-        mockEmployee.setId(1L);
-
-        when(timeClockDataProvider.findTimeClocksCountTodayForEmployee(any())).thenReturn(4);
-        when(employeeDataProvider.findEmployeeByResourceServerId(any())).thenReturn(new ResponseEntity<>(mockEmployee, HttpStatus.OK));
-
-        Exception exception = assertThrows(MaxTimeClockedExceptionForDay.class, () -> {
-            sut.execute(externalId);
-        });
-
-        assertEquals("Max time clocked exceeded for today. Limit: 4.", exception.getMessage());
-    }
-
-    @Test
     void shouldPublishNewTimeClockedOnQueuePublisher() {
         String externalId = "any_id";
 
         Employee mockEmployee = mockEmployee();
         mockEmployee.setId(1L);
 
-        when(timeClockDataProvider.findTimeClocksCountTodayForEmployee(any())).thenReturn(0);
         when(employeeDataProvider.findEmployeeByResourceServerId(any())).thenReturn(new ResponseEntity<>(mockEmployee, HttpStatus.OK));
 
         sut.execute(externalId);
@@ -126,7 +88,6 @@ class RegisterTimeClockUsecaseTest {
         Employee mockEmployee = mockEmployee();
         mockEmployee.setId(1L);
 
-        when(timeClockDataProvider.findTimeClocksCountTodayForEmployee(any())).thenReturn(0);
         when(employeeDataProvider.findEmployeeByResourceServerId(any())).thenReturn(new ResponseEntity<>(mockEmployee, HttpStatus.OK));
 
         RegisterTimeClockOutput output = sut.execute(externalId);
