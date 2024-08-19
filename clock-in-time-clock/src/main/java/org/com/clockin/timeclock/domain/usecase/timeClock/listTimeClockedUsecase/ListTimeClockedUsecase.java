@@ -5,7 +5,7 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import org.com.clockin.timeclock.domain.entity.TimeClock;
 import org.com.clockin.timeclock.domain.entity.external.Employee;
-import org.com.clockin.timeclock.domain.strategy.dateFormatValidator.DateFormatStrategy;
+import org.com.clockin.timeclock.domain.strategy.dateFormatValidator.DateTimeFormatStrategy;
 import org.com.clockin.timeclock.domain.strategy.dateFormatValidator.strategies.DateFormatRegexValidator;
 import org.com.clockin.timeclock.domain.usecase.timeClock.listTimeClockedUsecase.dto.ListTimeClockedInputFilters;
 import org.com.clockin.timeclock.domain.usecase.timeClock.listTimeClockedUsecase.dto.ListTimeClockedOutput;
@@ -33,7 +33,7 @@ public class ListTimeClockedUsecase {
     private final TimeClockDataProvider timeClockDataProvider;
     private final EmployeeDataProvider employeeDataProvider;
     private final DateHandler dateHandler;
-    private final DateFormatStrategy dateFormatStrategy = new DateFormatStrategy(new DateFormatRegexValidator());
+    private final DateTimeFormatStrategy dateTimeFormatStrategy = new DateTimeFormatStrategy(new DateFormatRegexValidator());
 
     public ListTimeClockedOutput execute(String externalAuthorization, ListTimeClockedInputFilters filters) {
         validateDateInputs(filters);
@@ -62,8 +62,8 @@ public class ListTimeClockedUsecase {
             throw new InvalidDateFiltersException();
         }
 
-        dateFormatStrategy.execute(filters.getStartDate(), "startDate");
-        dateFormatStrategy.execute(filters.getEndDate(), "endDate");
+        dateTimeFormatStrategy.execute(filters.getStartDate(), "startDate");
+        dateTimeFormatStrategy.execute(filters.getEndDate(), "endDate");
     }
 
     private Employee findEmployee(String externalAuthorization) {

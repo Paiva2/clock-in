@@ -1,9 +1,9 @@
 package org.com.clockin.timeclock.domain.strategy.dateFormatValidator;
 
-public class DateFormatStrategy {
+public class DateTimeFormatStrategy {
     private final DateValidatorStrategy strategy;
 
-    public DateFormatStrategy(DateValidatorStrategy strategy) {
+    public DateTimeFormatStrategy(DateValidatorStrategy strategy) {
         this.strategy = strategy;
     }
 

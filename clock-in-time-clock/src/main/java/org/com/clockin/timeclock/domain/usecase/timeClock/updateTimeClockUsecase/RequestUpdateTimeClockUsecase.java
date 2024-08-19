@@ -7,7 +7,7 @@ import org.com.clockin.timeclock.domain.common.exception.TimeClockNotFoundExcept
 import org.com.clockin.timeclock.domain.entity.PendingUpdateApproval;
 import org.com.clockin.timeclock.domain.entity.TimeClock;
 import org.com.clockin.timeclock.domain.entity.external.Employee;
-import org.com.clockin.timeclock.domain.strategy.dateFormatValidator.DateFormatStrategy;
+import org.com.clockin.timeclock.domain.strategy.dateFormatValidator.DateTimeFormatStrategy;
 import org.com.clockin.timeclock.domain.strategy.dateFormatValidator.strategies.TimeFormatRegexValidator;
 import org.com.clockin.timeclock.domain.usecase.timeClock.registerTimeClockUsecase.exception.EmployeeNotFoundException;
 import org.com.clockin.timeclock.domain.usecase.timeClock.updateTimeClockUsecase.dto.RequestUpdateTimeClockOutput;
@@ -31,7 +31,7 @@ public class RequestUpdateTimeClockUsecase {
     private final EmployeeDataProvider employeeDataProvider;
     private final TimeClockDataProvider timeClockDataProvider;
     private final PendingUpdateApprovalDataProvider pendingUpdateApprovalDataProvider;
-    private final DateFormatStrategy dateFormatStrategy = new DateFormatStrategy(new TimeFormatRegexValidator());
+    private final DateTimeFormatStrategy dateTimeFormatStrategy = new DateTimeFormatStrategy(new TimeFormatRegexValidator());
 
     public RequestUpdateTimeClockOutput execute(String externalAuthorization, UUID timeClockId, UpdateTimeClockInput input) {
         validateInputNewTimeClocked(input);
@@ -48,7 +48,7 @@ public class RequestUpdateTimeClockUsecase {
     }
 
     private void validateInputNewTimeClocked(UpdateTimeClockInput input) {
-        dateFormatStrategy.execute(input.getUpdatedTimeClocked(), null);
+        dateTimeFormatStrategy.execute(input.getUpdatedTimeClocked(), null);
     }
 
     private Employee findEmployee(String externalAuthorization) {
