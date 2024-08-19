@@ -31,6 +31,9 @@ public class PendingUpdateApproval {
     @Column(name = "PUA_APPROVED", nullable = false)
     private Boolean approved;
 
+    @Column(name = "PUA_REASON", nullable = true)
+    private String reason;
+
     @CreationTimestamp
     @Column(name = "PUA_CREATED_AT")
     private Date createdAt;

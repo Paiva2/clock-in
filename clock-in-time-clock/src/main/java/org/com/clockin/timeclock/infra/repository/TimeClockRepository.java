@@ -9,6 +9,7 @@ import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import java.util.Date;
+import java.util.Optional;
 import java.util.UUID;
 
 @Repository
@@ -26,4 +27,6 @@ public interface TimeClockRepository extends JpaRepository<TimeClock, UUID> {
         AND ((date_trunc('day', tc_time_clocked) >= :startDate AND (date_trunc('day', tc_time_clocked) <= :endDate)))
         """, nativeQuery = true)
     Page<TimeClock> findAllByEmployee(@Param("employeeExternalId") Long employeeExternalId, @Param("startDate") Date startDate, @Param("endDate") Date endDate, Pageable pageable);
+
+    Optional<TimeClock> findByExternalEmployeeIdAndId(Long employeeId, UUID id);
 }

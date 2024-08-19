@@ -10,6 +10,8 @@ import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Component;
 
 import java.util.Date;
+import java.util.Optional;
+import java.util.UUID;
 
 @AllArgsConstructor
 @Component
@@ -28,5 +30,9 @@ public class TimeClockDataProvider {
         Pageable pageable = PageRequest.of(0, 90, Sort.Direction.ASC, "TC_TIME_CLOCKED");
 
         return timeClockRepository.findAllByEmployee(employeeExternalId, startDate, endDate, pageable);
+    }
+
+    public Optional<TimeClock> findByIdAndEmployeeId(Long employeeId, UUID timeClockId) {
+        return timeClockRepository.findByExternalEmployeeIdAndId(employeeId, timeClockId);
     }
 }
