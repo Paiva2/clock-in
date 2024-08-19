@@ -1,4 +1,4 @@
-package org.com.clockin.timeclock.domain.usecase.timeClock.updateTimeClockUsecase.exception;
+package org.com.clockin.timeclock.domain.strategy.dateFormatValidator.exception;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.ResponseStatus;

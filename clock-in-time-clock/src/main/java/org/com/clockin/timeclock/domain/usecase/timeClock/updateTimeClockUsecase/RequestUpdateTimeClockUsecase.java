@@ -7,10 +7,11 @@ import org.com.clockin.timeclock.domain.common.exception.TimeClockNotFoundExcept
 import org.com.clockin.timeclock.domain.entity.PendingUpdateApproval;
 import org.com.clockin.timeclock.domain.entity.TimeClock;
 import org.com.clockin.timeclock.domain.entity.external.Employee;
+import org.com.clockin.timeclock.domain.strategy.dateFormatValidator.DateFormatStrategy;
+import org.com.clockin.timeclock.domain.strategy.dateFormatValidator.strategies.TimeFormatRegexValidator;
 import org.com.clockin.timeclock.domain.usecase.timeClock.registerTimeClockUsecase.exception.EmployeeNotFoundException;
 import org.com.clockin.timeclock.domain.usecase.timeClock.updateTimeClockUsecase.dto.RequestUpdateTimeClockOutput;
 import org.com.clockin.timeclock.domain.usecase.timeClock.updateTimeClockUsecase.dto.UpdateTimeClockInput;
-import org.com.clockin.timeclock.domain.usecase.timeClock.updateTimeClockUsecase.exception.InvalidHourTimeFormatException;
 import org.com.clockin.timeclock.infra.dataProvider.PendingUpdateApprovalDataProvider;
 import org.com.clockin.timeclock.infra.dataProvider.TimeClockDataProvider;
 import org.com.clockin.timeclock.infra.dataProvider.external.EmployeeDataProvider;
@@ -20,8 +21,6 @@ import org.springframework.stereotype.Service;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.UUID;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 @AllArgsConstructor
 @Builder
@@ -32,6 +31,7 @@ public class RequestUpdateTimeClockUsecase {
     private final EmployeeDataProvider employeeDataProvider;
     private final TimeClockDataProvider timeClockDataProvider;
     private final PendingUpdateApprovalDataProvider pendingUpdateApprovalDataProvider;
+    private final DateFormatStrategy dateFormatStrategy = new DateFormatStrategy(new TimeFormatRegexValidator());
 
     public RequestUpdateTimeClockOutput execute(String externalAuthorization, UUID timeClockId, UpdateTimeClockInput input) {
         validateInputNewTimeClocked(input);
@@ -48,12 +48,7 @@ public class RequestUpdateTimeClockUsecase {
     }
 
     private void validateInputNewTimeClocked(UpdateTimeClockInput input) {
-        Pattern pattern = Pattern.compile(HOUR_PATTERN);
-        Matcher matcher = pattern.matcher(input.getUpdatedTimeClocked());
-
-        if (!matcher.matches()) {
-            throw new InvalidHourTimeFormatException();
-        }
+        dateFormatStrategy.execute(input.getUpdatedTimeClocked(), null);
     }
 
     private Employee findEmployee(String externalAuthorization) {
