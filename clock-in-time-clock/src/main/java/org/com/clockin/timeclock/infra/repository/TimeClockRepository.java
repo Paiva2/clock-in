@@ -9,17 +9,18 @@ import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import java.util.Date;
+import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
 @Repository
 public interface TimeClockRepository extends JpaRepository<TimeClock, UUID> {
     @Query(value = """ 
-            SELECT COUNT(*) FROM "clock-in-db".public2.tb_time_clocks
+            SELECT * FROM "clock-in-db".public2.tb_time_clocks
             WHERE tc_external_employee_id = :employeeExternalId
-            AND date_trunc('day', tc_time_clocked) = date_trunc('day', now())
+            AND date_trunc('day', tc_time_clocked) = date_trunc('day', cast(:dayTime as DATE))
         """, nativeQuery = true)
-    Integer countTimeClocksTodayByEmployee(@Param("employeeExternalId") Long employeeExternalId);
+    List<TimeClock> getTimeClocksOnDayByEmployee(@Param("employeeExternalId") Long employeeExternalId, @Param("dayTime") Date dayTime);
 
     @Query(value = """
         SELECT * FROM "clock-in-db".public2.tb_time_clocks

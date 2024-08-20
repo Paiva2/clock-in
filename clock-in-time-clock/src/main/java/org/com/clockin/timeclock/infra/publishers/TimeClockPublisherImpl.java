@@ -16,12 +16,4 @@ public class TimeClockPublisherImpl implements TimeClockPublisher {
     private final AmqpTemplate amqpTemplate;
     private final ObjectMapper objectMapper = new ObjectMapper();
 
-    @Override
-    public void publishNewTimeClocked(PublishNewTimeClockedInput input) {
-        try {
-            amqpTemplate.convertAndSend(timeClockQueueName, objectMapper.writeValueAsString(input));
-        } catch (Exception e) {
-            throw new RuntimeException(e.getMessage());
-        }
-    }
 }

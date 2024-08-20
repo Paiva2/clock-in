@@ -26,6 +26,7 @@ public class ListTimeClockedOutput {
         private UUID id;
         private Long externalEmployeeId;
         private Date timeClocked;
+        private TimeClock.Event eventType;
         private Date updatedAt;
         private String day;
         private String month;
@@ -36,6 +37,7 @@ public class ListTimeClockedOutput {
                 .id(timeClock.getId())
                 .externalEmployeeId(timeClock.getExternalEmployeeId())
                 .timeClocked(timeClock.getTimeClocked())
+                .eventType(timeClock.getEvent())
                 .updatedAt(timeClock.getUpdatedAt())
                 .day(DateHandler.extractDayNumberFromDate(timeClock.getTimeClocked()))
                 .month(DateHandler.extractMonthFromDate(timeClock.getTimeClocked()))

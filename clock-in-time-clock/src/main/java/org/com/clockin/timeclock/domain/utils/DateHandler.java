@@ -13,12 +13,12 @@ import java.util.Date;
 
 @Component
 public class DateHandler {
-    public Date formatDate(String date, String pattern) throws ParseException {
+    public Date parseDate(String date, String pattern) throws ParseException {
         DateFormat formatter = new SimpleDateFormat(pattern);
 
         return formatter.parse(date);
     }
-
+    
     public ZonedDateTime getTodayOnMaxHour() {
         return ZonedDateTime.now().with(LocalTime.MAX);
     }
@@ -31,20 +31,20 @@ public class DateHandler {
 
     public static String extractDayNumberFromDate(Date date) {
         LocalDate localDate = date.toInstant().atZone(ZoneId.systemDefault()).toLocalDate();
-        return localDate.getDayOfMonth() < 10 ? insertLeadingZero(localDate.getDayOfMonth()) : String.valueOf(localDate.getDayOfMonth());
+        return localDate.getDayOfMonth() < 10 ? insertLeadingZero(localDate.getDayOfMonth()) : java.lang.String.valueOf(localDate.getDayOfMonth());
     }
-    
+
     public static String extractYearFromDate(Date date) {
         LocalDate localDate = date.toInstant().atZone(ZoneId.systemDefault()).toLocalDate();
-        return String.valueOf(localDate.getYear());
+        return java.lang.String.valueOf(localDate.getYear());
     }
 
     public static String extractMonthFromDate(Date date) {
         LocalDate localDate = date.toInstant().atZone(ZoneId.systemDefault()).toLocalDate();
-        return localDate.getMonthValue() < 10 ? insertLeadingZero(localDate.getMonthValue()) : String.valueOf(localDate.getMonthValue());
+        return localDate.getMonthValue() < 10 ? insertLeadingZero(localDate.getMonthValue()) : java.lang.String.valueOf(localDate.getMonthValue());
     }
 
     private static String insertLeadingZero(Integer value) {
-        return String.format("%02d", value);
+        return java.lang.String.format("%02d", value);
     }
 }

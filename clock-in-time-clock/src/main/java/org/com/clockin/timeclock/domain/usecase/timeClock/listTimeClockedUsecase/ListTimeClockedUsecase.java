@@ -83,7 +83,7 @@ public class ListTimeClockedUsecase {
     }
 
     private Date formatInputDate(String inputDate) throws ParseException {
-        return dateHandler.formatDate(inputDate, DATE_PATTERN);
+        return dateHandler.parseDate(inputDate, DATE_PATTERN);
     }
 
     private void validateDateRange(Date startDate, Date endDate) {

@@ -5,6 +5,7 @@ import org.com.clockin.timeclock.domain.usecase.timeClock.listTimeClockedUsecase
 import org.com.clockin.timeclock.domain.usecase.timeClock.listTimeClockedUsecase.dto.ListTimeClockedInputFilters;
 import org.com.clockin.timeclock.domain.usecase.timeClock.listTimeClockedUsecase.dto.ListTimeClockedOutput;
 import org.com.clockin.timeclock.domain.usecase.timeClock.registerTimeClockUsecase.RegisterTimeClockUsecase;
+import org.com.clockin.timeclock.domain.usecase.timeClock.registerTimeClockUsecase.dto.RegisterTimeClockInput;
 import org.com.clockin.timeclock.domain.usecase.timeClock.registerTimeClockUsecase.dto.RegisterTimeClockOutput;
 import org.com.clockin.timeclock.domain.usecase.timeClock.updateTimeClockUsecase.RequestUpdateTimeClockUsecase;
 import org.com.clockin.timeclock.domain.usecase.timeClock.updateTimeClockUsecase.dto.RequestUpdateTimeClockOutput;
@@ -24,8 +25,8 @@ public class TimeClockControllerImpl implements TimeClockController {
     private final RequestUpdateTimeClockUsecase requestUpdateTimeClockUsecase;
 
     @Override
-    public ResponseEntity<RegisterTimeClockOutput> register(Jwt jwt) {
-        RegisterTimeClockOutput output = registerTimeClockUsecase.execute(formatBearer(jwt.getTokenValue()));
+    public ResponseEntity<RegisterTimeClockOutput> register(Jwt jwt, RegisterTimeClockInput input) {
+        RegisterTimeClockOutput output = registerTimeClockUsecase.execute(formatBearer(jwt.getTokenValue()), input);
         return new ResponseEntity<>(output, HttpStatus.CREATED);
     }
 

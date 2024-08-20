@@ -10,6 +10,7 @@ import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Component;
 
 import java.util.Date;
+import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -18,8 +19,8 @@ import java.util.UUID;
 public class TimeClockDataProvider {
     private final TimeClockRepository timeClockRepository;
 
-    public Integer findTimeClocksCountTodayForEmployee(Long employeeExternalId) {
-        return timeClockRepository.countTimeClocksTodayByEmployee(employeeExternalId);
+    public List<TimeClock> findTimeClocksOnDayForEmployee(Long employeeExternalId, Date day) {
+        return timeClockRepository.getTimeClocksOnDayByEmployee(employeeExternalId, day);
     }
 
     public TimeClock persistTimeClock(TimeClock timeClock) {

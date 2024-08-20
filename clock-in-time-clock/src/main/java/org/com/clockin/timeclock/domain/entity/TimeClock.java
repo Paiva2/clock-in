@@ -27,6 +27,10 @@ public class TimeClock {
     @Column(name = "TC_EXTERNAL_EMPLOYEE_ID", nullable = false)
     private Long externalEmployeeId;
 
+    @Column(name = "TC_EVENT", nullable = false)
+    @Enumerated(EnumType.STRING)
+    private Event event;
+
     @CreationTimestamp
     @Column(name = "TC_CREATED_AT")
     private Date createdAt;
@@ -34,4 +38,11 @@ public class TimeClock {
     @UpdateTimestamp
     @Column(name = "TC_UPDATED_AT")
     private Date updatedAt;
+
+    public enum Event {
+        IN,
+        INTERVAL_IN,
+        INTERVAL_OUT,
+        OUT
+    }
 }

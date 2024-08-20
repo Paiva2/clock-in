@@ -2,6 +2,7 @@ package org.com.clockin.timeclock.presentation.controller.timeClockController;
 
 import jakarta.validation.Valid;
 import org.com.clockin.timeclock.domain.usecase.timeClock.listTimeClockedUsecase.dto.ListTimeClockedOutput;
+import org.com.clockin.timeclock.domain.usecase.timeClock.registerTimeClockUsecase.dto.RegisterTimeClockInput;
 import org.com.clockin.timeclock.domain.usecase.timeClock.registerTimeClockUsecase.dto.RegisterTimeClockOutput;
 import org.com.clockin.timeclock.domain.usecase.timeClock.updateTimeClockUsecase.dto.RequestUpdateTimeClockOutput;
 import org.com.clockin.timeclock.domain.usecase.timeClock.updateTimeClockUsecase.dto.UpdateTimeClockInput;
@@ -16,7 +17,7 @@ import java.util.UUID;
 @RequestMapping("time-clock")
 public interface TimeClockController {
     @PostMapping("/register")
-    ResponseEntity<RegisterTimeClockOutput> register(@AuthenticationPrincipal Jwt jwt);
+    ResponseEntity<RegisterTimeClockOutput> register(@AuthenticationPrincipal Jwt jwt, @RequestBody @Valid RegisterTimeClockInput input);
 
     @GetMapping("/list")
     ResponseEntity<ListTimeClockedOutput> listAll(@AuthenticationPrincipal Jwt jwt, @RequestParam("startDate") String startDate, @RequestParam("endDate") String endDate);
