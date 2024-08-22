@@ -6,6 +6,7 @@ import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
 
 import java.util.Date;
+import java.util.List;
 import java.util.UUID;
 
 @AllArgsConstructor
@@ -38,6 +39,9 @@ public class TimeClock {
     @UpdateTimestamp
     @Column(name = "TC_UPDATED_AT")
     private Date updatedAt;
+
+    @OneToMany(mappedBy = "timeClock", fetch = FetchType.LAZY)
+    private List<PendingUpdateApproval> pendingUpdateApprovals;
 
     public enum Event {
         IN,

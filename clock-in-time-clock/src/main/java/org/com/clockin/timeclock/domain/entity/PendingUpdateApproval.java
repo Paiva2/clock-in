@@ -21,7 +21,7 @@ public class PendingUpdateApproval {
     @Column(name = "PUA_ID")
     private UUID id;
 
-    @OneToOne
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "PUA_TIME_CLOCK_ID", nullable = false)
     private TimeClock timeClock;
 
