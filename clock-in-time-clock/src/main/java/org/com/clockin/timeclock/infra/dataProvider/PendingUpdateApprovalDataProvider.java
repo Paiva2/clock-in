@@ -5,6 +5,9 @@ import org.com.clockin.timeclock.domain.entity.PendingUpdateApproval;
 import org.com.clockin.timeclock.infra.repository.PendingUpdateApprovalRepository;
 import org.springframework.stereotype.Component;
 
+import java.util.Optional;
+import java.util.UUID;
+
 @Component
 @AllArgsConstructor
 public class PendingUpdateApprovalDataProvider {
@@ -12,5 +15,13 @@ public class PendingUpdateApprovalDataProvider {
 
     public PendingUpdateApproval persist(PendingUpdateApproval pendingUpdateApproval) {
         return pendingUpdateApprovalRepository.save(pendingUpdateApproval);
+    }
+
+    public Optional<PendingUpdateApproval> findByIdAndEmployee(UUID pendingUpdateId, Long externalEmployeeId) {
+        return pendingUpdateApprovalRepository.findByIdAndEmployeeId(pendingUpdateId, externalEmployeeId);
+    }
+
+    public void removePendingUpdateApproval(UUID updateApprovalId) {
+        pendingUpdateApprovalRepository.deleteById(updateApprovalId);
     }
 }

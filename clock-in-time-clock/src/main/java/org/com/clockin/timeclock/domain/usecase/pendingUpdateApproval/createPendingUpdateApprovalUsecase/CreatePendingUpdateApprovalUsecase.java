@@ -1,4 +1,4 @@
-package org.com.clockin.timeclock.domain.usecase.timeClock.updateTimeClockUsecase;
+package org.com.clockin.timeclock.domain.usecase.pendingUpdateApproval.createPendingUpdateApprovalUsecase;
 
 import feign.FeignException;
 import lombok.AllArgsConstructor;
@@ -9,9 +9,9 @@ import org.com.clockin.timeclock.domain.entity.TimeClock;
 import org.com.clockin.timeclock.domain.entity.external.Employee;
 import org.com.clockin.timeclock.domain.strategy.dateFormatValidator.DateTimeFormatStrategy;
 import org.com.clockin.timeclock.domain.strategy.dateFormatValidator.strategies.TimeFormatRegexValidator;
+import org.com.clockin.timeclock.domain.usecase.pendingUpdateApproval.createPendingUpdateApprovalUsecase.dto.UpdateTimeClockInput;
 import org.com.clockin.timeclock.domain.usecase.timeClock.registerTimeClockUsecase.exception.EmployeeNotFoundException;
-import org.com.clockin.timeclock.domain.usecase.timeClock.updateTimeClockUsecase.dto.RequestUpdateTimeClockOutput;
-import org.com.clockin.timeclock.domain.usecase.timeClock.updateTimeClockUsecase.dto.UpdateTimeClockInput;
+import org.com.clockin.timeclock.domain.usecase.pendingUpdateApproval.createPendingUpdateApprovalUsecase.dto.RequestUpdateTimeClockOutput;
 import org.com.clockin.timeclock.infra.dataProvider.PendingUpdateApprovalDataProvider;
 import org.com.clockin.timeclock.infra.dataProvider.TimeClockDataProvider;
 import org.com.clockin.timeclock.infra.dataProvider.external.EmployeeDataProvider;
@@ -25,7 +25,7 @@ import java.util.UUID;
 @AllArgsConstructor
 @Builder
 @Service
-public class RequestUpdateTimeClockUsecase {
+public class CreatePendingUpdateApprovalUsecase {
     private final static String HOUR_PATTERN = "(?:[01]\\d|2[0-3]):(?:[0-5]\\d):(?:[0-5]\\d)"; // HH:MM:SS
 
     private final EmployeeDataProvider employeeDataProvider;
@@ -65,7 +65,7 @@ public class RequestUpdateTimeClockUsecase {
 
     private PendingUpdateApproval fillPendingUpdateApproval(UpdateTimeClockInput input, Date updatedTimeClocked, TimeClock timeClock) {
         return PendingUpdateApproval.builder()
-            .approved(false)
+            .approved(null)
             .reason(input.getReason())
             .timeClockUpdated(updatedTimeClocked)
             .timeClock(timeClock)

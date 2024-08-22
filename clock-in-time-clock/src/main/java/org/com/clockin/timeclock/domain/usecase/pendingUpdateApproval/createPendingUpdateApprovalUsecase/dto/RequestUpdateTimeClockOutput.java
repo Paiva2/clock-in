@@ -1,4 +1,4 @@
-package org.com.clockin.timeclock.domain.usecase.timeClock.updateTimeClockUsecase.dto;
+package org.com.clockin.timeclock.domain.usecase.pendingUpdateApproval.createPendingUpdateApprovalUsecase.dto;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;

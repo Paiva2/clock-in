@@ -28,7 +28,7 @@ public class PendingUpdateApproval {
     @Column(name = "PUA_TIME_CLOCK_UPDATED", nullable = false)
     private Date timeClockUpdated;
 
-    @Column(name = "PUA_APPROVED", nullable = false)
+    @Column(name = "PUA_APPROVED", nullable = true)
     private Boolean approved;
 
     @Column(name = "PUA_REASON", nullable = true)

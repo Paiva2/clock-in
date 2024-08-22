@@ -1,13 +1,14 @@
-package org.com.clockin.timeclock.domain.usecase.timeClock.updateTimeClockUsecase;
+package org.com.clockin.timeclock.domain.usecase.timeClock.requestUpdateTimeClockUsecase;
 
 import org.com.clockin.timeclock.domain.common.exception.TimeClockNotFoundException;
 import org.com.clockin.timeclock.domain.entity.PendingUpdateApproval;
 import org.com.clockin.timeclock.domain.entity.TimeClock;
 import org.com.clockin.timeclock.domain.entity.external.Employee;
 import org.com.clockin.timeclock.domain.strategy.dateFormatValidator.exception.InvalidHourTimeFormatException;
+import org.com.clockin.timeclock.domain.usecase.pendingUpdateApproval.createPendingUpdateApprovalUsecase.CreatePendingUpdateApprovalUsecase;
 import org.com.clockin.timeclock.domain.usecase.timeClock.registerTimeClockUsecase.exception.EmployeeNotFoundException;
-import org.com.clockin.timeclock.domain.usecase.timeClock.updateTimeClockUsecase.dto.RequestUpdateTimeClockOutput;
-import org.com.clockin.timeclock.domain.usecase.timeClock.updateTimeClockUsecase.dto.UpdateTimeClockInput;
+import org.com.clockin.timeclock.domain.usecase.pendingUpdateApproval.createPendingUpdateApprovalUsecase.dto.RequestUpdateTimeClockOutput;
+import org.com.clockin.timeclock.domain.usecase.pendingUpdateApproval.createPendingUpdateApprovalUsecase.dto.UpdateTimeClockInput;
 import org.com.clockin.timeclock.infra.dataProvider.PendingUpdateApprovalDataProvider;
 import org.com.clockin.timeclock.infra.dataProvider.TimeClockDataProvider;
 import org.com.clockin.timeclock.infra.dataProvider.external.EmployeeDataProvider;
@@ -30,7 +31,7 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
-class RequestUpdateTimeClockUsecaseTest {
+class CreatePendingUpdateApprovalUsecaseTest {
     @Mock
     private EmployeeDataProvider employeeDataProvider;
 
@@ -40,11 +41,11 @@ class RequestUpdateTimeClockUsecaseTest {
     @Mock
     private PendingUpdateApprovalDataProvider pendingUpdateApprovalDataProvider;
 
-    private RequestUpdateTimeClockUsecase sut;
+    private CreatePendingUpdateApprovalUsecase sut;
 
     @BeforeEach
     void setUp() {
-        sut = RequestUpdateTimeClockUsecase.builder()
+        sut = CreatePendingUpdateApprovalUsecase.builder()
             .employeeDataProvider(employeeDataProvider)
             .timeClockDataProvider(timeClockDataProvider)
             .pendingUpdateApprovalDataProvider(pendingUpdateApprovalDataProvider)

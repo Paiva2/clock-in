@@ -1,4 +1,4 @@
-package org.com.clockin.timeclock.domain.usecase.timeClock.updateTimeClockUsecase.dto;
+package org.com.clockin.timeclock.domain.usecase.pendingUpdateApproval.createPendingUpdateApprovalUsecase.dto;
 
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
