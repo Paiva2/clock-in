@@ -8,7 +8,7 @@ import org.com.clockin.timeclock.domain.entity.external.Employee;
 import org.com.clockin.timeclock.domain.strategy.dateFormatValidator.DateTimeFormatStrategy;
 import org.com.clockin.timeclock.domain.strategy.dateFormatValidator.strategies.DateHourFormatRegexValidator;
 import org.com.clockin.timeclock.domain.usecase.timeClock.registerTimeClockUsecase.dto.EventAlreadyClockedOnDay;
-import org.com.clockin.timeclock.domain.usecase.timeClock.registerTimeClockUsecase.dto.FutureTimeClockedException;
+import org.com.clockin.timeclock.domain.usecase.timeClock.registerTimeClockUsecase.dto.FuturePastTimeClockedException;
 import org.com.clockin.timeclock.domain.usecase.timeClock.registerTimeClockUsecase.dto.RegisterTimeClockInput;
 import org.com.clockin.timeclock.domain.usecase.timeClock.registerTimeClockUsecase.dto.RegisterTimeClockOutput;
 import org.com.clockin.timeclock.domain.usecase.timeClock.registerTimeClockUsecase.exception.EmployeeNotFoundException;
@@ -20,6 +20,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 
 import java.text.ParseException;
+import java.util.Calendar;
 import java.util.Date;
 import java.util.List;
 import java.util.Optional;
@@ -42,7 +43,7 @@ public class RegisterTimeClockUsecase {
 
         Date timeClockedOnDate = formatDateInputToDate(input.getTimeClocked());
 
-        checkIfTimeClockedIsFuture(timeClockedOnDate);
+        checkIfTimeClockedIsFutureOrPastMonth(timeClockedOnDate);
         checkTimeClocksInTheDay(employee.getId(), timeClockedOnDate, input.getEvent());
 
         TimeClock timeClock = fillTimeClock(employee.getId(), timeClockedOnDate, input.getEvent());
@@ -88,12 +89,25 @@ public class RegisterTimeClockUsecase {
             .build();
     }
 
-    private void checkIfTimeClockedIsFuture(Date inputTimeClocked) {
+    private void checkIfTimeClockedIsFutureOrPastMonth(Date inputTimeClocked) {
         Date today = Date.from(dateHandler.getTodayOnMaxHour().toInstant());
+        Integer currentMonth = getCurrentMonth();
+        Integer currentYear = getCurrentYear();
 
-        if (inputTimeClocked.after(today)) {
-            throw new FutureTimeClockedException();
+        Integer timeClockedMonth = Calendar.getInstance().get(Calendar.MONTH);
+        Integer timeClockedYear = Calendar.getInstance().get(Calendar.MONTH);
+
+        if (inputTimeClocked.after(today) || !currentMonth.equals(timeClockedMonth) || !currentYear.equals(timeClockedYear)) {
+            throw new FuturePastTimeClockedException();
         }
+    }
+
+    private Integer getCurrentMonth() {
+        return Calendar.getInstance().get(Calendar.MONTH);
+    }
+
+    private Integer getCurrentYear() {
+        return Calendar.getInstance().get(Calendar.YEAR);
     }
 
     private void checkTimeClocksInTheDay(Long employeeId, Date inputTimeClocked, TimeClock.Event event) {
