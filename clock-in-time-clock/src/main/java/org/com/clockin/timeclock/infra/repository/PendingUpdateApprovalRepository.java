@@ -18,4 +18,6 @@ public interface PendingUpdateApprovalRepository extends JpaRepository<PendingUp
             AND tc.tc_external_employee_id = :externalEmployeeId
         """, nativeQuery = true)
     Optional<PendingUpdateApproval> findByIdAndEmployeeId(@Param("pendingUpdateId") UUID pendingUpdateId, @Param("externalEmployeeId") Long externalEmployeeId);
+
+    void deleteAllByTimeClockId(UUID timeClockId);
 }

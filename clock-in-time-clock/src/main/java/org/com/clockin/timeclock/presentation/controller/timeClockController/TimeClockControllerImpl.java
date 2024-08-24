@@ -1,6 +1,8 @@
 package org.com.clockin.timeclock.presentation.controller.timeClockController;
 
 import lombok.AllArgsConstructor;
+import org.com.clockin.timeclock.domain.usecase.timeClock.deleteTimeClockUsecase.DeleteTimeClockUsecase;
+import org.com.clockin.timeclock.domain.usecase.timeClock.deleteTimeClockUsecase.dto.DeleteTimeClockUsecaseOutput;
 import org.com.clockin.timeclock.domain.usecase.timeClock.listTimeClockedUsecase.ListTimeClockedUsecase;
 import org.com.clockin.timeclock.domain.usecase.timeClock.listTimeClockedUsecase.dto.ListTimeClockedInputFilters;
 import org.com.clockin.timeclock.domain.usecase.timeClock.listTimeClockedUsecase.dto.ListTimeClockedOutput;
@@ -12,16 +14,25 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.web.bind.annotation.RestController;
 
+import java.util.UUID;
+
 @RestController
 @AllArgsConstructor
 public class TimeClockControllerImpl implements TimeClockController {
     private final RegisterTimeClockUsecase registerTimeClockUsecase;
     private final ListTimeClockedUsecase listTimeClockedUsecase;
+    private final DeleteTimeClockUsecase deleteTimeClockUsecase;
 
     @Override
     public ResponseEntity<RegisterTimeClockOutput> register(Jwt jwt, RegisterTimeClockInput input) {
         RegisterTimeClockOutput output = registerTimeClockUsecase.execute(mountBearer(jwt.getTokenValue()), input);
         return new ResponseEntity<>(output, HttpStatus.CREATED);
+    }
+
+    @Override
+    public ResponseEntity<DeleteTimeClockUsecaseOutput> delete(Jwt jwt, UUID timeClockId) {
+        DeleteTimeClockUsecaseOutput output = deleteTimeClockUsecase.execute(mountBearer(jwt.getTokenValue()), timeClockId);
+        return new ResponseEntity<>(output, HttpStatus.OK);
     }
 
     @Override

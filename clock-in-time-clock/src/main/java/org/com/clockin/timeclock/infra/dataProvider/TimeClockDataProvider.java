@@ -36,4 +36,8 @@ public class TimeClockDataProvider {
     public Optional<TimeClock> findByIdAndEmployeeId(Long employeeId, UUID timeClockId) {
         return timeClockRepository.findByExternalEmployeeIdAndId(employeeId, timeClockId);
     }
+
+    public void deleteById(UUID timeClockId) {
+        timeClockRepository.deleteById(timeClockId);
+    }
 }

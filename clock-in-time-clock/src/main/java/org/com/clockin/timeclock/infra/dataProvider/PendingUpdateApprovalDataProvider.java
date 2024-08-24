@@ -24,4 +24,8 @@ public class PendingUpdateApprovalDataProvider {
     public void removePendingUpdateApproval(UUID updateApprovalId) {
         pendingUpdateApprovalRepository.deleteById(updateApprovalId);
     }
+
+    public void removeAllPendingUpdateApprovalsByTimeClockId(UUID timeClockId) {
+        pendingUpdateApprovalRepository.deleteAllByTimeClockId(timeClockId);
+    }
 }
