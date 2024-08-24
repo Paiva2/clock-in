@@ -2,6 +2,7 @@ package org.com.clockin.timeclock.presentation.controller.timeClockController;
 
 import jakarta.validation.Valid;
 import org.com.clockin.timeclock.domain.usecase.timeClock.deleteTimeClockUsecase.dto.DeleteTimeClockUsecaseOutput;
+import org.com.clockin.timeclock.domain.usecase.timeClock.filterTimeClockUsecase.dto.FilterTimeClockOutput;
 import org.com.clockin.timeclock.domain.usecase.timeClock.listTimeClockedUsecase.dto.ListTimeClockedOutput;
 import org.com.clockin.timeclock.domain.usecase.timeClock.registerTimeClockUsecase.dto.RegisterTimeClockInput;
 import org.com.clockin.timeclock.domain.usecase.timeClock.registerTimeClockUsecase.dto.RegisterTimeClockOutput;
@@ -23,4 +24,7 @@ public interface TimeClockController {
 
     @GetMapping("/list")
     ResponseEntity<ListTimeClockedOutput> listAll(@AuthenticationPrincipal Jwt jwt, @RequestParam("startDate") String startDate, @RequestParam("endDate") String endDate);
+
+    @GetMapping("/{timeClockId}")
+    ResponseEntity<FilterTimeClockOutput> filterSingle(@AuthenticationPrincipal Jwt jwt, @PathVariable("timeClockId") UUID timeClockId);
 }

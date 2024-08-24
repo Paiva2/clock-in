@@ -5,6 +5,7 @@ import org.com.clockin.timeclock.domain.entity.PendingUpdateApproval;
 import org.com.clockin.timeclock.infra.repository.PendingUpdateApprovalRepository;
 import org.springframework.stereotype.Component;
 
+import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -27,5 +28,9 @@ public class PendingUpdateApprovalDataProvider {
 
     public void removeAllPendingUpdateApprovalsByTimeClockId(UUID timeClockId) {
         pendingUpdateApprovalRepository.deleteAllByTimeClockId(timeClockId);
+    }
+
+    public List<PendingUpdateApproval> findAllByTimeClock(UUID timeClockId) {
+        return pendingUpdateApprovalRepository.findAllByTimeClockId(timeClockId);
     }
 }

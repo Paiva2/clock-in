@@ -3,6 +3,8 @@ package org.com.clockin.timeclock.presentation.controller.timeClockController;
 import lombok.AllArgsConstructor;
 import org.com.clockin.timeclock.domain.usecase.timeClock.deleteTimeClockUsecase.DeleteTimeClockUsecase;
 import org.com.clockin.timeclock.domain.usecase.timeClock.deleteTimeClockUsecase.dto.DeleteTimeClockUsecaseOutput;
+import org.com.clockin.timeclock.domain.usecase.timeClock.filterTimeClockUsecase.FilterTimeClockUsecase;
+import org.com.clockin.timeclock.domain.usecase.timeClock.filterTimeClockUsecase.dto.FilterTimeClockOutput;
 import org.com.clockin.timeclock.domain.usecase.timeClock.listTimeClockedUsecase.ListTimeClockedUsecase;
 import org.com.clockin.timeclock.domain.usecase.timeClock.listTimeClockedUsecase.dto.ListTimeClockedInputFilters;
 import org.com.clockin.timeclock.domain.usecase.timeClock.listTimeClockedUsecase.dto.ListTimeClockedOutput;
@@ -22,6 +24,7 @@ public class TimeClockControllerImpl implements TimeClockController {
     private final RegisterTimeClockUsecase registerTimeClockUsecase;
     private final ListTimeClockedUsecase listTimeClockedUsecase;
     private final DeleteTimeClockUsecase deleteTimeClockUsecase;
+    private final FilterTimeClockUsecase filterTimeClockUsecase;
 
     @Override
     public ResponseEntity<RegisterTimeClockOutput> register(Jwt jwt, RegisterTimeClockInput input) {
@@ -44,6 +47,12 @@ public class TimeClockControllerImpl implements TimeClockController {
                 .endDate(endDate)
                 .build()
         );
+        return new ResponseEntity<>(output, HttpStatus.OK);
+    }
+
+    @Override
+    public ResponseEntity<FilterTimeClockOutput> filterSingle(Jwt jwt, UUID timeClockId) {
+        FilterTimeClockOutput output = filterTimeClockUsecase.execute(mountBearer(jwt.getTokenValue()), timeClockId);
         return new ResponseEntity<>(output, HttpStatus.OK);
     }
 
