@@ -3,6 +3,7 @@ package org.com.clockin.timeclock.domain.usecase.timeClock.listTimeClockedUsecas
 import feign.FeignException;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
+import org.com.clockin.timeclock.domain.entity.ExtraHours;
 import org.com.clockin.timeclock.domain.entity.TimeClock;
 import org.com.clockin.timeclock.domain.entity.external.Employee;
 import org.com.clockin.timeclock.domain.strategy.dateFormatValidator.DateTimeFormatStrategy;
@@ -15,6 +16,7 @@ import org.com.clockin.timeclock.domain.usecase.timeClock.listTimeClockedUsecase
 import org.com.clockin.timeclock.domain.usecase.timeClock.listTimeClockedUsecase.exception.InvalidDateFiltersException;
 import org.com.clockin.timeclock.domain.usecase.timeClock.registerTimeClockUsecase.exception.EmployeeNotFoundException;
 import org.com.clockin.timeclock.domain.utils.DateHandler;
+import org.com.clockin.timeclock.infra.dataProvider.ExtraHoursDataProvider;
 import org.com.clockin.timeclock.infra.dataProvider.TimeClockDataProvider;
 import org.com.clockin.timeclock.infra.dataProvider.external.EmployeeDataProvider;
 import org.springframework.data.domain.Page;
@@ -35,6 +37,7 @@ public class ListTimeClockedUsecase {
     private final TimeClockDataProvider timeClockDataProvider;
     private final EmployeeDataProvider employeeDataProvider;
     private final DateHandler dateHandler;
+    private final ExtraHoursDataProvider extraHoursDataProvider;
     private final DateTimeFormatStrategy dateTimeFormatStrategy = new DateTimeFormatStrategy(new DateFormatRegexValidator());
 
     public ListTimeClockedOutput execute(String externalAuthorization, ListTimeClockedInputFilters filters) {
@@ -110,36 +113,16 @@ public class ListTimeClockedUsecase {
         return duration.toString().replace("PT", "");
     }
 
-    private void calculateAndSetWorkHoursOfDay(LinkedHashMap<String, TimeClockListDTO> timeClockeds, Employee employee) {
-        String employeeItineraryFormat = "PT" + employee.getItinerary().getDayWorkHours().replace(":", "H") + "M";
-        Duration employeeItineraryDuration = Duration.parse(employeeItineraryFormat);
-
+    private void calculateAndSetWorkHoursOfDay(LinkedHashMap<String, TimeClockListDTO> timeClockeds) {
         timeClockeds.keySet().forEach(key -> {
             TimeClockListDTO timeClockListDto = timeClockeds.get(key);
 
             if (timeClockListDto.getTimeClockeds().size() < 2) return;
-
-            Optional<TimeClockFilterOutput> eventIn = timeClockListDto.getTimeClockeds().stream().filter(timeClock -> timeClock.getEventType().equals(TimeClock.Event.IN)).findFirst();
-            if (eventIn.isEmpty()) return;
-
+            
+            Date inDate = timeClockListDto.getTimeClockeds().stream().map(TimeClockFilterOutput::getTimeClocked).min(Date::compareTo).get();
             Date outDate = timeClockListDto.getTimeClockeds().stream().map(TimeClockFilterOutput::getTimeClocked).max(Date::compareTo).get();
 
-            Duration hoursWorkedOnDay = Duration.between(eventIn.get().getTimeClocked().toInstant(), outDate.toInstant());
-
-            if (hoursWorkedOnDay.compareTo(employeeItineraryDuration) > 0) {
-                Long workedHoursSeconds = hoursWorkedOnDay.toSeconds();
-                Long itinerarySeconds = employeeItineraryDuration.toSeconds();
-
-                Long secondsExtras = workedHoursSeconds - itinerarySeconds;
-
-                Long hoursExtra = secondsExtras / 3600;
-                Long minutes = (secondsExtras % 3600) / 60;
-
-
-                timeClockListDto.setTotalExtraHoursDay(dateHandler.buildHoursFormatString(hoursExtra, minutes));
-            } else {
-                timeClockListDto.setTotalExtraHoursDay("0");
-            }
+            Duration hoursWorkedOnDay = Duration.between(inDate.toInstant(), outDate.toInstant());
 
             timeClockListDto.setTotalHoursWorkDay(convertStringDuration(hoursWorkedOnDay));
         });
@@ -161,12 +144,15 @@ public class ListTimeClockedUsecase {
             TimeClockListDTO timeClockList = timeClockeds.get(key);
 
             if (Objects.isNull(timeClockList)) {
+                Optional<ExtraHours> findPeriodExtraHours = extraHoursDataProvider.findByDayPeriod(key, employee.getId());
+
                 TimeClockListDTO timeClockListDtos = TimeClockListDTO.builder()
                     .timeClockeds(
                         new LinkedList<>() {{
                             add(TimeClockFilterOutput.toDto(timeClock));
                         }}
                     )
+                    .totalExtraHoursDay(findPeriodExtraHours.isPresent() ? findPeriodExtraHours.get().getExtraHours() : "0")
                     .totalHoursWorkDay(null)
                     .build();
 
@@ -176,7 +162,7 @@ public class ListTimeClockedUsecase {
             }
         }
 
-        calculateAndSetWorkHoursOfDay(timeClockeds, employee);
+        calculateAndSetWorkHoursOfDay(timeClockeds);
 
         return timeClockeds;
     }
