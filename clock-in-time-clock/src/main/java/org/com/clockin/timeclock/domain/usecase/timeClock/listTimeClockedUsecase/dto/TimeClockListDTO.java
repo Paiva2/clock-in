@@ -14,4 +14,5 @@ import java.util.LinkedList;
 public class TimeClockListDTO {
     private LinkedList<TimeClockFilterOutput> timeClockeds;
     private String totalHoursWorkDay;
+    private String totalExtraHoursDay;
 }

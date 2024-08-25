@@ -21,6 +21,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 
+import java.text.MessageFormat;
 import java.text.ParseException;
 import java.time.Duration;
 import java.util.*;
@@ -56,7 +57,7 @@ public class ListTimeClockedUsecase {
 
         Page<TimeClock> timeClocks = listTimeClocks(employee.getId(), startDate, endDate);
 
-        return mountOutput(timeClocks, filters.getStartDate(), filters.getEndDate());
+        return mountOutput(timeClocks, filters.getStartDate(), filters.getEndDate(), employee);
     }
 
     private void validateDateInputs(ListTimeClockedInputFilters filters) {
@@ -110,7 +111,28 @@ public class ListTimeClockedUsecase {
         return duration.toString().replace("PT", "");
     }
 
-    private void calculateAndSetWorkHoursOfDay(LinkedHashMap<String, TimeClockListDTO> timeClockeds) {
+    private String buildHoursFormatString(Long hours, Long minutes) {
+        StringBuilder stringBuilder = new StringBuilder();
+
+        if (hours < 10) {
+            stringBuilder.append("0");
+        }
+
+        stringBuilder.append("{0}").append(":");
+
+        if (minutes < 10) {
+            stringBuilder.append("0");
+        }
+
+        stringBuilder.append("{1}");
+
+        return MessageFormat.format(stringBuilder.toString(), hours, minutes).replace(":", "H") + "M";
+    }
+
+    private void calculateAndSetWorkHoursOfDay(LinkedHashMap<String, TimeClockListDTO> timeClockeds, Employee employee) {
+        String employeeItineraryFormat = "PT" + employee.getItinerary().getDayWorkHours().replace(":", "H") + "M";
+        Duration employeeItineraryDuration = Duration.parse(employeeItineraryFormat);
+
         timeClockeds.keySet().forEach(key -> {
             TimeClockListDTO timeClockListDto = timeClockeds.get(key);
 
@@ -123,11 +145,26 @@ public class ListTimeClockedUsecase {
 
             Duration hoursWorkedOnDay = Duration.between(eventIn.get().getTimeClocked().toInstant(), outDate.toInstant());
 
+            if (hoursWorkedOnDay.compareTo(employeeItineraryDuration) > 0) {
+                Long workedHoursSeconds = hoursWorkedOnDay.toSeconds();
+                Long itinerarySeconds = employeeItineraryDuration.toSeconds();
+
+                Long secondsExtras = workedHoursSeconds - itinerarySeconds;
+
+                Long hoursExtra = secondsExtras / 3600;
+                Long minutes = (secondsExtras % 3600) / 60;
+
+
+                timeClockListDto.setTotalExtraHoursDay(buildHoursFormatString(hoursExtra, minutes));
+            } else {
+                timeClockListDto.setTotalExtraHoursDay("0");
+            }
+
             timeClockListDto.setTotalHoursWorkDay(convertStringDuration(hoursWorkedOnDay));
         });
     }
 
-    private LinkedHashMap<String, TimeClockListDTO> aggregateTimeClockedByDay(List<TimeClock> timeClocks) {
+    private LinkedHashMap<String, TimeClockListDTO> aggregateTimeClockedByDay(List<TimeClock> timeClocks, Employee employee) {
         LinkedHashMap<String, TimeClockListDTO> timeClockeds = new LinkedHashMap<>();
 
         for (TimeClock timeClock : timeClocks) {
@@ -158,13 +195,13 @@ public class ListTimeClockedUsecase {
             }
         }
 
-        calculateAndSetWorkHoursOfDay(timeClockeds);
+        calculateAndSetWorkHoursOfDay(timeClockeds, employee);
 
         return timeClockeds;
     }
 
-    private ListTimeClockedOutput mountOutput(Page<TimeClock> timeClocks, String startDate, String endDate) {
-        LinkedHashMap<String, TimeClockListDTO> timeClockeds = aggregateTimeClockedByDay(timeClocks.getContent());
+    private ListTimeClockedOutput mountOutput(Page<TimeClock> timeClocks, String startDate, String endDate, Employee employee) {
+        LinkedHashMap<String, TimeClockListDTO> timeClockeds = aggregateTimeClockedByDay(timeClocks.getContent(), employee);
 
         return ListTimeClockedOutput.builder()
             .totalItems(timeClocks.getTotalElements())

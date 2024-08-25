@@ -9,11 +9,10 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @Builder
 @Data
-public class Employee {
-    private Long id;
-    private String firstName;
-    private String lastName;
-    private String email;
-    private String profilePictureUrl;
-    private Itinerary itinerary;
+public class Itinerary {
+    private String dayWorkHours;
+    private String inHour;
+    private String intervalInHour;
+    private String intervalOutHour;
+    private String outHour;
 }
