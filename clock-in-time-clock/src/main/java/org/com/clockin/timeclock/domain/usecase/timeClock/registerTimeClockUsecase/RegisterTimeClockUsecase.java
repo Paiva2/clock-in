@@ -1,8 +1,10 @@
 package org.com.clockin.timeclock.domain.usecase.timeClock.registerTimeClockUsecase;
 
 import feign.FeignException;
+import jakarta.transaction.Transactional;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
+import org.com.clockin.timeclock.domain.entity.ExtraHours;
 import org.com.clockin.timeclock.domain.entity.TimeClock;
 import org.com.clockin.timeclock.domain.entity.external.Employee;
 import org.com.clockin.timeclock.domain.strategy.dateFormatValidator.DateTimeFormatStrategy;
@@ -14,30 +16,40 @@ import org.com.clockin.timeclock.domain.usecase.timeClock.registerTimeClockUseca
 import org.com.clockin.timeclock.domain.usecase.timeClock.registerTimeClockUsecase.exception.EmployeeNotFoundException;
 import org.com.clockin.timeclock.domain.usecase.timeClock.registerTimeClockUsecase.exception.MaxTimeClockedExceptionForDay;
 import org.com.clockin.timeclock.domain.utils.DateHandler;
+import org.com.clockin.timeclock.infra.dataProvider.ExtraHoursDataProvider;
 import org.com.clockin.timeclock.infra.dataProvider.TimeClockDataProvider;
 import org.com.clockin.timeclock.infra.dataProvider.external.EmployeeDataProvider;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 
 import java.text.ParseException;
-import java.util.Calendar;
-import java.util.Date;
-import java.util.List;
-import java.util.Optional;
+import java.time.Duration;
+import java.util.*;
 
 @AllArgsConstructor
 @Builder
 @Service
 public class RegisterTimeClockUsecase {
     private final static String INPUTTED_STRING_DATE_FORMAT = "dd-MM-yyyy HH:mm:ss";
+    private final static String INPUTTED_DAY_PERIOD_FORMAT = "dd-MM-yyyy";
 
     private final EmployeeDataProvider employeeDataProvider;
     private final TimeClockDataProvider timeClockDataProvider;
+    private final ExtraHoursDataProvider extraHoursDataProvider;
     private final DateTimeFormatStrategy dateTimeFormatStrategy = new DateTimeFormatStrategy(new DateHourFormatRegexValidator());
     private final DateHandler dateHandler;
 
+    @Transactional
     public RegisterTimeClockOutput execute(String externalAuthorization, RegisterTimeClockInput input) {
         validateInputClockedTime(input.getTimeClocked());
+
+        String dayPeriod;
+
+        try {
+            dayPeriod = extractDayPeriod(input.getTimeClocked());
+        } catch (ParseException e) {
+            throw new RuntimeException(e.getMessage(), e);
+        }
 
         Employee employee = findEmployee(externalAuthorization);
 
@@ -50,11 +62,35 @@ public class RegisterTimeClockUsecase {
 
         persistTimeClock(timeClock);
 
+        handleExtraHours(employee, timeClockedOnDate, dayPeriod);
+
         return mountOutput(employee.getId(), timeClock.getTimeClocked());
     }
 
     private void validateInputClockedTime(String timeClocked) {
         dateTimeFormatStrategy.execute(timeClocked, "timeClocked");
+    }
+
+    private String extractDayPeriod(String timeClocked) throws ParseException {
+        Date timeClockedDate = dateHandler.parseDate(timeClocked, INPUTTED_STRING_DATE_FORMAT);
+        return dateHandler.formatDate(timeClockedDate, INPUTTED_DAY_PERIOD_FORMAT);
+    }
+
+    private void createExtraHours(String dayPeriod, Long employeeId, String extraHours) {
+        ExtraHours fillExtra = fillNewExtraHours(dayPeriod, employeeId, extraHours);
+        persistExtraHours(fillExtra);
+    }
+
+    private ExtraHours fillNewExtraHours(String dayPeriod, Long employeeId, String extraHours) {
+        return ExtraHours.builder()
+            .dayPeriod(dayPeriod)
+            .externalEmployeeId(employeeId)
+            .extraHours(extraHours)
+            .build();
+    }
+
+    private ExtraHours persistExtraHours(ExtraHours extraHours) {
+        return extraHoursDataProvider.persist(extraHours);
     }
 
     private Employee findEmployee(String externalAuthorization) {
@@ -111,7 +147,7 @@ public class RegisterTimeClockUsecase {
     }
 
     private void checkTimeClocksInTheDay(Long employeeId, Date inputTimeClocked, TimeClock.Event event) {
-        List<TimeClock> timeClockedOnDay = timeClockedQuantityOnDay(employeeId, inputTimeClocked);
+        List<TimeClock> timeClockedOnDay = getTimeClockedQuantityOnDay(employeeId, inputTimeClocked);
 
         if (timeClockedOnDay.size() >= 4) {
             throw new MaxTimeClockedExceptionForDay();
@@ -124,12 +160,42 @@ public class RegisterTimeClockUsecase {
         }
     }
 
-    private List<TimeClock> timeClockedQuantityOnDay(Long employeeId, Date inputTimeClocked) {
+    private List<TimeClock> getTimeClockedQuantityOnDay(Long employeeId, Date inputTimeClocked) {
         return timeClockDataProvider.findTimeClocksOnDayForEmployee(employeeId, inputTimeClocked);
     }
 
     private TimeClock persistTimeClock(TimeClock timeClock) {
         return timeClockDataProvider.persistTimeClock(timeClock);
+    }
+
+
+    private void handleExtraHours(Employee employee, Date timeClockedOnDate, String dayPeriod) {
+        List<TimeClock> timeClockedsList = getTimeClockedQuantityOnDay(employee.getId(), timeClockedOnDate);
+
+        if (Objects.isNull(timeClockedsList) || timeClockedsList.isEmpty()) return;
+
+        Date firstTimeClockedOnDay = timeClockedsList.stream().map(TimeClock::getTimeClocked).min(Date::compareTo).get();
+        Date lastTimeClockedOnDay = timeClockedsList.stream().map(TimeClock::getTimeClocked).max(Date::compareTo).get();
+
+        Duration durationWorkedOnDay = Duration.between(firstTimeClockedOnDay.toInstant(), lastTimeClockedOnDay.toInstant());
+        Duration employeeTotalDayWorkHours = getEmployeeWorkDuration(employee.getItinerary().getDayWorkHours());
+
+        if (durationWorkedOnDay.compareTo(employeeTotalDayWorkHours) > 0) {
+            Long workedHoursSeconds = durationWorkedOnDay.toSeconds();
+            Long itinerarySeconds = employeeTotalDayWorkHours.toSeconds();
+
+            Long secondsExtras = workedHoursSeconds - itinerarySeconds;
+
+            Long hoursExtra = secondsExtras / 3600;
+            Long minutes = (secondsExtras % 3600) / 60;
+
+            createExtraHours(dayPeriod, employee.getId(), dateHandler.buildHoursFormatString(hoursExtra, minutes));
+        }
+    }
+
+    private Duration getEmployeeWorkDuration(String dayWorkHours) {
+        String durationHoursChar = "PT" + dayWorkHours.replace(":", "H") + "M";
+        return Duration.parse(durationHoursChar);
     }
 
     private RegisterTimeClockOutput mountOutput(Long externalEmployeeId, Date timeClocked) {

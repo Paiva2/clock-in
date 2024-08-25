@@ -1,0 +1,24 @@
+CREATE TABLE IF NOT EXISTS "clock-in-db".public2.TB_EXTRA_HOURS (
+    EH_ID UUID PRIMARY KEY,
+    EH_EXTRA_HOURS VARCHAR(200) NOT NULL,
+    EH_DAY_PERIOD VARCHAR(15) NOT NULL,
+    EH_EXTERNAL_EMPLOYEE_ID BIGSERIAL NOT NULL,
+    EH_CREATED_AT TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    EH_UPDATED_AT TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE  FUNCTION update_updated_at_tb_extra_hours()
+    RETURNS TRIGGER AS $$
+BEGIN
+    NEW.EH_UPDATED_AT = now();
+    RETURN NEW;
+END;
+$$ language 'plpgsql';
+
+CREATE TRIGGER update_extra_hours_task_updated_on
+    BEFORE UPDATE
+    ON
+        "clock-in-db".public2.TB_EXTRA_HOURS
+    FOR EACH ROW
+EXECUTE PROCEDURE update_updated_at_tb_extra_hours();
+--

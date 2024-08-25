@@ -21,7 +21,6 @@ import org.springframework.data.domain.Page;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 
-import java.text.MessageFormat;
 import java.text.ParseException;
 import java.time.Duration;
 import java.util.*;
@@ -111,24 +110,6 @@ public class ListTimeClockedUsecase {
         return duration.toString().replace("PT", "");
     }
 
-    private String buildHoursFormatString(Long hours, Long minutes) {
-        StringBuilder stringBuilder = new StringBuilder();
-
-        if (hours < 10) {
-            stringBuilder.append("0");
-        }
-
-        stringBuilder.append("{0}").append(":");
-
-        if (minutes < 10) {
-            stringBuilder.append("0");
-        }
-
-        stringBuilder.append("{1}");
-
-        return MessageFormat.format(stringBuilder.toString(), hours, minutes).replace(":", "H") + "M";
-    }
-
     private void calculateAndSetWorkHoursOfDay(LinkedHashMap<String, TimeClockListDTO> timeClockeds, Employee employee) {
         String employeeItineraryFormat = "PT" + employee.getItinerary().getDayWorkHours().replace(":", "H") + "M";
         Duration employeeItineraryDuration = Duration.parse(employeeItineraryFormat);
@@ -155,7 +136,7 @@ public class ListTimeClockedUsecase {
                 Long minutes = (secondsExtras % 3600) / 60;
 
 
-                timeClockListDto.setTotalExtraHoursDay(buildHoursFormatString(hoursExtra, minutes));
+                timeClockListDto.setTotalExtraHoursDay(dateHandler.buildHoursFormatString(hoursExtra, minutes));
             } else {
                 timeClockListDto.setTotalExtraHoursDay("0");
             }

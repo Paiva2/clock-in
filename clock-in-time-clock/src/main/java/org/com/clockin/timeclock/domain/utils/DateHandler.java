@@ -3,6 +3,7 @@ package org.com.clockin.timeclock.domain.utils;
 import org.springframework.stereotype.Component;
 
 import java.text.DateFormat;
+import java.text.MessageFormat;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.time.LocalDate;
@@ -18,7 +19,13 @@ public class DateHandler {
 
         return formatter.parse(date);
     }
-    
+
+    public String formatDate(Date date, String pattern) {
+        DateFormat formatter = new SimpleDateFormat(pattern);
+
+        return formatter.format(date);
+    }
+
     public ZonedDateTime getTodayOnMaxHour() {
         return ZonedDateTime.now().with(LocalTime.MAX);
     }
@@ -46,5 +53,23 @@ public class DateHandler {
 
     private static String insertLeadingZero(Integer value) {
         return java.lang.String.format("%02d", value);
+    }
+
+    public String buildHoursFormatString(Long hours, Long minutes) {
+        StringBuilder stringBuilder = new StringBuilder();
+
+        if (hours < 10) {
+            stringBuilder.append("0");
+        }
+
+        stringBuilder.append("{0}").append("H");
+
+        if (minutes < 10) {
+            stringBuilder.append("0");
+        }
+
+        stringBuilder.append("{1}");
+
+        return MessageFormat.format(stringBuilder.toString(), hours, minutes) + "M";
     }
 }
