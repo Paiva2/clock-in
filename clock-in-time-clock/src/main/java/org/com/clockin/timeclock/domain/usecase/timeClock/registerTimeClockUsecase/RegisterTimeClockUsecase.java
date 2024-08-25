@@ -95,7 +95,7 @@ public class RegisterTimeClockUsecase {
         Integer currentYear = getCurrentYear();
 
         Integer timeClockedMonth = Calendar.getInstance().get(Calendar.MONTH);
-        Integer timeClockedYear = Calendar.getInstance().get(Calendar.MONTH);
+        Integer timeClockedYear = Calendar.getInstance().get(Calendar.YEAR);
 
         if (inputTimeClocked.after(today) || !currentMonth.equals(timeClockedMonth) || !currentYear.equals(timeClockedYear)) {
             throw new FuturePastTimeClockedException();

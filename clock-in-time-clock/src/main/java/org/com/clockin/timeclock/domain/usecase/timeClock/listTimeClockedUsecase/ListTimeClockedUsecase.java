@@ -9,6 +9,8 @@ import org.com.clockin.timeclock.domain.strategy.dateFormatValidator.DateTimeFor
 import org.com.clockin.timeclock.domain.strategy.dateFormatValidator.strategies.DateFormatRegexValidator;
 import org.com.clockin.timeclock.domain.usecase.timeClock.listTimeClockedUsecase.dto.ListTimeClockedInputFilters;
 import org.com.clockin.timeclock.domain.usecase.timeClock.listTimeClockedUsecase.dto.ListTimeClockedOutput;
+import org.com.clockin.timeclock.domain.usecase.timeClock.listTimeClockedUsecase.dto.TimeClockFilterOutput;
+import org.com.clockin.timeclock.domain.usecase.timeClock.listTimeClockedUsecase.dto.TimeClockListDTO;
 import org.com.clockin.timeclock.domain.usecase.timeClock.listTimeClockedUsecase.exception.DateRangeInvalidException;
 import org.com.clockin.timeclock.domain.usecase.timeClock.listTimeClockedUsecase.exception.InvalidDateFiltersException;
 import org.com.clockin.timeclock.domain.usecase.timeClock.registerTimeClockUsecase.exception.EmployeeNotFoundException;
@@ -20,8 +22,8 @@ import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 
 import java.text.ParseException;
-import java.util.Date;
-import java.util.Objects;
+import java.time.Duration;
+import java.util.*;
 
 @Builder
 @Service
@@ -104,12 +106,71 @@ public class ListTimeClockedUsecase {
         return timeClockDataProvider.listAllByEmployee(employeeId, startDate, endDate);
     }
 
+    private String convertStringDuration(Duration duration) {
+        return duration.toString().replace("PT", "");
+    }
+
+    private void calculateAndSetWorkHoursOfDay(LinkedHashMap<String, TimeClockListDTO> timeClockeds) {
+        timeClockeds.keySet().forEach(key -> {
+            TimeClockListDTO timeClockListDto = timeClockeds.get(key);
+
+            if (timeClockListDto.getTimeClockeds().size() < 2) return;
+
+            Optional<TimeClockFilterOutput> eventIn = timeClockListDto.getTimeClockeds().stream().filter(timeClock -> timeClock.getEventType().equals(TimeClock.Event.IN)).findFirst();
+            if (eventIn.isEmpty()) return;
+
+            Date outDate = timeClockListDto.getTimeClockeds().stream().map(TimeClockFilterOutput::getTimeClocked).max(Date::compareTo).get();
+
+            Duration hoursWorkedOnDay = Duration.between(eventIn.get().getTimeClocked().toInstant(), outDate.toInstant());
+
+            timeClockListDto.setTotalHoursWorkDay(convertStringDuration(hoursWorkedOnDay));
+        });
+    }
+
+    private LinkedHashMap<String, TimeClockListDTO> aggregateTimeClockedByDay(List<TimeClock> timeClocks) {
+        LinkedHashMap<String, TimeClockListDTO> timeClockeds = new LinkedHashMap<>();
+
+        for (TimeClock timeClock : timeClocks) {
+            Calendar calendar = Calendar.getInstance();
+            calendar.setTime(timeClock.getTimeClocked());
+
+            String day = DateHandler.extractDayNumberFromDate(timeClock.getTimeClocked());
+            String month = DateHandler.extractMonthFromDate(timeClock.getTimeClocked());
+            String year = DateHandler.extractYearFromDate(timeClock.getTimeClocked());
+
+            String key = day + "-" + month + "-" + year;
+
+            TimeClockListDTO timeClockList = timeClockeds.get(key);
+
+            if (Objects.isNull(timeClockList)) {
+                TimeClockListDTO timeClockListDtos = TimeClockListDTO.builder()
+                    .timeClockeds(
+                        new LinkedList<>() {{
+                            add(TimeClockFilterOutput.toDto(timeClock));
+                        }}
+                    )
+                    .totalHoursWorkDay(null)
+                    .build();
+
+                timeClockeds.put(key, timeClockListDtos);
+            } else {
+                timeClockList.getTimeClockeds().add(TimeClockFilterOutput.toDto(timeClock));
+            }
+        }
+
+        calculateAndSetWorkHoursOfDay(timeClockeds);
+
+        return timeClockeds;
+    }
+
     private ListTimeClockedOutput mountOutput(Page<TimeClock> timeClocks, String startDate, String endDate) {
+        LinkedHashMap<String, TimeClockListDTO> timeClockeds = aggregateTimeClockedByDay(timeClocks.getContent());
+
         return ListTimeClockedOutput.builder()
             .totalItems(timeClocks.getTotalElements())
             .fromDate(startDate)
             .toDate(endDate)
-            .items(timeClocks.getContent().stream().map(ListTimeClockedOutput.TimeClockFilterOutput::toDto).toList())
+            .items(timeClockeds)
             .build();
     }
 }
