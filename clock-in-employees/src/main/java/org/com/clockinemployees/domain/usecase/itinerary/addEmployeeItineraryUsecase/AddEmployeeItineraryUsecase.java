@@ -118,8 +118,14 @@ public class AddEmployeeItineraryUsecase {
         String[] hourAndMinuteIn = input.getHourIn().split(":");
         String[] hourAndMinuteOut = input.getHourOut().split(":");
 
+        String[] hourAndMinuteIntervalIn = input.getIntervalIn().split(":");
+        String[] hourAndMinuteIntervalOut = input.getIntervalOut().split(":");
+
         Date timeIn = dateFromHourInput(hourAndMinuteIn, 0);
         Date timeOut = dateFromHourInput(hourAndMinuteOut, 0);
+
+        Date timeIntervalIn = dateFromHourInput(hourAndMinuteIntervalIn, 0);
+        Date timeIntervalOut = dateFromHourInput(hourAndMinuteIntervalOut, 0);
 
         Integer inHour = Integer.parseInt(hourAndMinuteIn[0]);
         Integer outHour = Integer.parseInt(hourAndMinuteOut[0]);
@@ -130,11 +136,12 @@ public class AddEmployeeItineraryUsecase {
             timeOut = DateUtils.addDays(timeOut, 1);
         }
 
-        Long seconds = (timeOut.getTime() - timeIn.getTime()) / 1000;
-        Long hh = TimeUnit.SECONDS.toHours(seconds) % 24;
-        Long mm = TimeUnit.SECONDS.toMinutes(seconds) % 60;
+        Long intervalDurationDiff = (timeIntervalOut.getTime() - timeIntervalIn.getTime()) / 1000;
+        Long totalWorkDayInSeconds = ((timeOut.getTime() - timeIn.getTime()) / 1000) - intervalDurationDiff;
+        Long totalWorkDayHours = TimeUnit.SECONDS.toHours(totalWorkDayInSeconds) % 24;
+        Long totalWorkDayMinutes = TimeUnit.SECONDS.toMinutes(totalWorkDayInSeconds) % 60;
 
-        return MessageFormat.format(buildHoursFormatString(hh, mm), hh, mm);
+        return buildHoursFormatString(totalWorkDayHours, totalWorkDayMinutes);
     }
 
     private String buildHoursFormatString(Long hours, Long minutes) {
@@ -152,7 +159,7 @@ public class AddEmployeeItineraryUsecase {
 
         stringBuilder.append("{1}");
 
-        return stringBuilder.toString();
+        return MessageFormat.format(stringBuilder.toString(), hours, minutes);
     }
 
     private Date dateFromHourInput(String[] hourAndMinute, Integer daysToAdd) {
