@@ -15,6 +15,7 @@ import org.com.clockin.timeclock.domain.usecase.timeClock.registerTimeClockUseca
 import org.com.clockin.timeclock.domain.usecase.timeClock.registerTimeClockUsecase.dto.RegisterTimeClockOutput;
 import org.com.clockin.timeclock.domain.usecase.timeClock.registerTimeClockUsecase.exception.EmployeeNotFoundException;
 import org.com.clockin.timeclock.domain.usecase.timeClock.registerTimeClockUsecase.exception.MaxTimeClockedExceptionForDay;
+import org.com.clockin.timeclock.domain.usecase.timeClock.registerTimeClockUsecase.exception.NecessaryEventMissingException;
 import org.com.clockin.timeclock.domain.utils.DateHandler;
 import org.com.clockin.timeclock.infra.dataProvider.ExtraHoursDataProvider;
 import org.com.clockin.timeclock.infra.dataProvider.TimeClockDataProvider;
@@ -26,12 +27,15 @@ import java.text.ParseException;
 import java.time.Duration;
 import java.util.*;
 
+import static org.com.clockin.timeclock.domain.entity.TimeClock.Event.*;
+
 @AllArgsConstructor
 @Builder
 @Service
 public class RegisterTimeClockUsecase {
     private final static String INPUTTED_STRING_DATE_FORMAT = "dd-MM-yyyy HH:mm:ss";
     private final static String INPUTTED_DAY_PERIOD_FORMAT = "dd-MM-yyyy";
+    private final static Long ONE_HOUR_IN_SECONDS = 3600L;
 
     private final EmployeeDataProvider employeeDataProvider;
     private final TimeClockDataProvider timeClockDataProvider;
@@ -43,6 +47,8 @@ public class RegisterTimeClockUsecase {
     public RegisterTimeClockOutput execute(String externalAuthorization, RegisterTimeClockInput input) {
         validateInputClockedTime(input.getTimeClocked());
 
+        Employee employee = findEmployee(externalAuthorization);
+
         String dayPeriod;
 
         try {
@@ -51,12 +57,14 @@ public class RegisterTimeClockUsecase {
             throw new RuntimeException(e.getMessage(), e);
         }
 
-        Employee employee = findEmployee(externalAuthorization);
-
         Date timeClockedOnDate = formatDateInputToDate(input.getTimeClocked());
 
+        List<TimeClock> timeClockedsOnDay = getListTimeClockedOnDay(employee.getId(), timeClockedOnDate);
+
+        setTimeClockEvent(timeClockedsOnDay, input);
+
         checkIfTimeClockedIsFutureOrPastMonth(timeClockedOnDate);
-        checkTimeClocksInTheDay(employee.getId(), timeClockedOnDate, input.getEvent());
+        checkTimeClocksInTheDay(timeClockedsOnDay, input.getEvent());
 
         TimeClock timeClock = fillTimeClock(employee.getId(), timeClockedOnDate, input.getEvent());
 
@@ -89,8 +97,40 @@ public class RegisterTimeClockUsecase {
             .build();
     }
 
-    private ExtraHours persistExtraHours(ExtraHours extraHours) {
-        return extraHoursDataProvider.persist(extraHours);
+    private void persistExtraHours(ExtraHours extraHours) {
+        extraHoursDataProvider.persist(extraHours);
+    }
+
+    private void setTimeClockEvent(List<TimeClock> timeClockedsOnDay, RegisterTimeClockInput input) {
+        if (Objects.nonNull(input.getEvent())) {
+            checkDesiredAndNecessaryEvents(timeClockedsOnDay, input.getEvent());
+            return;
+        }
+
+        if (timeClockedsOnDay.isEmpty()) {
+            input.setEvent(IN);
+            return;
+        }
+
+        TimeClock lastTimeClocked = timeClockedsOnDay.stream()
+            .sorted((tc1, tc2) -> tc2.getTimeClocked().compareTo(tc1.getTimeClocked()))
+            .findFirst()
+            .get();
+
+        TimeClock.Event nextEvent = getNextEventOnTimeClock(lastTimeClocked.getEvent());
+        input.setEvent(nextEvent);
+    }
+
+    private TimeClock.Event getNextEventOnTimeClock(TimeClock.Event lastEvent) {
+        TimeClock.Event nextEvent = null;
+
+        switch (lastEvent) {
+            case IN -> nextEvent = INTERVAL_IN;
+            case INTERVAL_IN -> nextEvent = INTERVAL_OUT;
+            case INTERVAL_OUT -> nextEvent = OUT;
+        }
+
+        return nextEvent;
     }
 
     private Employee findEmployee(String externalAuthorization) {
@@ -146,48 +186,86 @@ public class RegisterTimeClockUsecase {
         return Calendar.getInstance().get(Calendar.YEAR);
     }
 
-    private void checkTimeClocksInTheDay(Long employeeId, Date inputTimeClocked, TimeClock.Event event) {
-        List<TimeClock> timeClockedOnDay = getTimeClockedQuantityOnDay(employeeId, inputTimeClocked);
-
-        if (timeClockedOnDay.size() >= 4) {
+    private void checkTimeClocksInTheDay(List<TimeClock> timeClockedsOnDay, TimeClock.Event event) {
+        if (timeClockedsOnDay.size() >= 4) {
             throw new MaxTimeClockedExceptionForDay();
         }
 
-        Optional<TimeClock> timeClockWithEvent = timeClockedOnDay.stream().filter(timeClock -> timeClock.getEvent().equals(event)).findAny();
+        Optional<TimeClock> timeClockWithEvent = timeClockedsOnDay.stream().filter(timeClock -> timeClock.getEvent().equals(event)).findAny();
 
         if (timeClockWithEvent.isPresent()) {
             throw new EventAlreadyClockedOnDay(event);
         }
     }
 
-    private List<TimeClock> getTimeClockedQuantityOnDay(Long employeeId, Date inputTimeClocked) {
+    private void checkDesiredAndNecessaryEvents(List<TimeClock> timeClockedsOnDay, TimeClock.Event event) {
+        switch (event) {
+            case INTERVAL_IN -> findNecessaryEventOnList(timeClockedsOnDay, IN, INTERVAL_IN);
+            case INTERVAL_OUT -> findNecessaryEventOnList(timeClockedsOnDay, INTERVAL_IN, INTERVAL_OUT);
+            case OUT -> {
+                findNecessaryEventOnList(timeClockedsOnDay, IN, OUT);
+
+                Boolean employeeHasIntervalIn = findTimeClockEventOnList(timeClockedsOnDay, INTERVAL_IN).isPresent();
+
+                if (employeeHasIntervalIn) {
+                    findNecessaryEventOnList(timeClockedsOnDay, INTERVAL_OUT, OUT);
+                }
+            }
+        }
+    }
+
+    private void findNecessaryEventOnList(List<TimeClock> timeClockedsList, TimeClock.Event necessaryEvent, TimeClock.Event desiredEvent) {
+        findTimeClockEventOnList(timeClockedsList, necessaryEvent).orElseThrow(() -> new NecessaryEventMissingException(necessaryEvent, desiredEvent));
+    }
+
+    private Optional<TimeClock> findTimeClockEventOnList(List<TimeClock> timeClockedsList, TimeClock.Event necessaryEvent) {
+        return timeClockedsList.stream().filter(timeClock -> timeClock.getEvent().equals(necessaryEvent)).findAny();
+    }
+
+    private List<TimeClock> getListTimeClockedOnDay(Long employeeId, Date inputTimeClocked) {
         return timeClockDataProvider.findTimeClocksOnDayForEmployee(employeeId, inputTimeClocked);
     }
 
-    private TimeClock persistTimeClock(TimeClock timeClock) {
-        return timeClockDataProvider.persistTimeClock(timeClock);
+    private void persistTimeClock(TimeClock timeClock) {
+        timeClockDataProvider.persistTimeClock(timeClock);
     }
 
 
     private void handleExtraHours(Employee employee, Date timeClockedOnDate, String dayPeriod) {
-        List<TimeClock> timeClockedsList = getTimeClockedQuantityOnDay(employee.getId(), timeClockedOnDate);
+        List<TimeClock> timeClockedsList = getListTimeClockedOnDay(employee.getId(), timeClockedOnDate);
 
         if (Objects.isNull(timeClockedsList) || timeClockedsList.isEmpty()) return;
 
-        Date firstTimeClockedOnDay = timeClockedsList.stream().map(TimeClock::getTimeClocked).min(Date::compareTo).get();
-        Date lastTimeClockedOnDay = timeClockedsList.stream().map(TimeClock::getTimeClocked).max(Date::compareTo).get();
+        Optional<TimeClock> inClocked = findTimeClockEventOnList(timeClockedsList, IN);
+        if (inClocked.isEmpty()) return;
 
-        Duration durationWorkedOnDay = Duration.between(firstTimeClockedOnDay.toInstant(), lastTimeClockedOnDay.toInstant());
-        Duration employeeTotalDayWorkHours = getEmployeeWorkDuration(employee.getItinerary().getDayWorkHours());
+        Optional<TimeClock> outClocked = findTimeClockEventOnList(timeClockedsList, OUT);
+        if (outClocked.isEmpty()) return;
 
-        if (durationWorkedOnDay.compareTo(employeeTotalDayWorkHours) > 0) {
-            Long workedHoursSeconds = durationWorkedOnDay.toSeconds();
-            Long itinerarySeconds = employeeTotalDayWorkHours.toSeconds();
+        Optional<TimeClock> intervalInClocked = findTimeClockEventOnList(timeClockedsList, INTERVAL_IN);
 
-            Long secondsExtras = workedHoursSeconds - itinerarySeconds;
+        Long secondsOfHoursWorked = 0L;
 
-            Long hoursExtra = secondsExtras / 3600;
-            Long minutes = (secondsExtras % 3600) / 60;
+        if (intervalInClocked.isPresent()) {
+            Optional<TimeClock> intervalOutClocked = findTimeClockEventOnList(timeClockedsList, INTERVAL_OUT);
+            if (intervalOutClocked.isEmpty()) return;
+
+            Duration diffBetweenInAndIntervalIn = Duration.between(inClocked.get().getTimeClocked().toInstant(), intervalInClocked.get().getTimeClocked().toInstant());
+            secondsOfHoursWorked += diffBetweenInAndIntervalIn.toSeconds();
+
+            Duration diffBetweenIntervalOutAndOut = Duration.between(intervalOutClocked.get().getTimeClocked().toInstant(), outClocked.get().getTimeClocked().toInstant());
+            secondsOfHoursWorked += diffBetweenIntervalOutAndOut.toSeconds();
+        } else {
+            Duration diffBetweenInAndOut = Duration.between(inClocked.get().getTimeClocked().toInstant(), outClocked.get().getTimeClocked().toInstant());
+            secondsOfHoursWorked += diffBetweenInAndOut.toSeconds();
+        }
+
+        Duration employeeTotalItinerary = getEmployeeWorkDuration(employee.getItinerary().getDayWorkHours());
+
+        if (secondsOfHoursWorked > employeeTotalItinerary.toSeconds()) {
+            Long extraWorkedOnSeconds = secondsOfHoursWorked - employeeTotalItinerary.toSeconds();
+            Long hoursExtra = extraWorkedOnSeconds / 3600;
+            Long minutes = (extraWorkedOnSeconds % 3600) / 60;
 
             createExtraHours(dayPeriod, employee.getId(), dateHandler.buildHoursFormatString(hoursExtra, minutes));
         }

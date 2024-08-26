@@ -1,7 +1,6 @@
 package org.com.clockin.timeclock.domain.usecase.timeClock.registerTimeClockUsecase.dto;
 
 import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.NotNull;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -15,7 +14,6 @@ import org.com.clockin.timeclock.domain.entity.TimeClock;
 public class RegisterTimeClockInput {
     @NotBlank
     private String timeClocked;
-
-    @NotNull
+    
     private TimeClock.Event event;
 }
