@@ -19,16 +19,35 @@ public interface ExtraHoursRepository extends JpaRepository<ExtraHours, UUID> {
             SELECT * FROM "clock-in-db".public2.tb_extra_hours
             WHERE eh_external_employee_id = :employeeId
             AND eh_extra_hours <> '00H00M'
-            AND (:period IS NULL OR eh_day_period = :period)
+            AND ( (:period IS NULL) OR eh_day_period = :period )
+            AND ( (:from IS NULL AND :to IS NULL) OR
+                    (
+                        (:from IS NOT NULL AND :to IS NOT NULL AND to_char(to_date(eh_day_period, 'DD-MM-YYYY'), 'YYYY-MM-DD') BETWEEN to_char(to_date(:from, 'DD-MM-YYYY'), 'YYYY-MM-DD') AND to_char(to_date(:to, 'DD-MM-YYYY'), 'YYYY-MM-DD'))
+                        OR
+                        (:from IS NOT NULL AND :to IS NULL AND to_char(to_date(eh_day_period, 'DD-MM-YYYY'), 'YYYY-MM-DD') >= to_char(to_date(:from, 'DD-MM-YYYY'), 'YYYY-MM-DD'))
+                        OR
+                        (:from IS NULL AND :to IS NOT NULL AND to_char(to_date(eh_day_period, 'DD-MM-YYYY'), 'YYYY-MM-DD') <= to_char(to_date(:to, 'DD-MM-YYYY'), 'YYYY-MM-DD'))
+                    )
+                )
+            ORDER BY to_char(to_date(eh_day_period, 'DD-MM-YYYY'), 'YYYY-MM-DD') ASC;
         """, nativeQuery = true)
-    Page<ExtraHours> findAllByExternalEmployeeId(@Param("employeeId") Long employeeId, @Param("period") String period, Pageable pageable);
+    Page<ExtraHours> findAllByExternalEmployeeId(@Param("employeeId") Long employeeId, @Param("period") String period, @Param("from") String from, @Param("to") String to, Pageable pageable);
 
     @Query(value = """
-           SELECT SUM( EXTRACT (EPOCH FROM eh_extra_hours::interval) )
-           FROM "clock-in-db".public2.tb_extra_hours
-           WHERE eh_external_employee_id = :employeeId
-           AND eh_extra_hours <> '00H00M'
-           AND (:period IS NULL OR eh_day_period = :period)
+            SELECT SUM( EXTRACT (EPOCH FROM eh_extra_hours::interval) )
+            FROM "clock-in-db".public2.tb_extra_hours
+            WHERE eh_external_employee_id = :employeeId
+            AND eh_extra_hours <> '00H00M'
+            AND ( (:period IS NULL) OR eh_day_period = :period )
+            AND ( (:from IS NULL AND :to IS NULL) OR
+                    (
+                        (:from IS NOT NULL AND :to IS NOT NULL AND to_char(to_date(eh_day_period, 'DD-MM-YYYY'), 'YYYY-MM-DD') BETWEEN to_char(to_date(:from, 'DD-MM-YYYY'), 'YYYY-MM-DD') AND to_char(to_date(:to, 'DD-MM-YYYY'), 'YYYY-MM-DD'))
+                        OR
+                        (:from IS NOT NULL AND :to IS NULL AND to_char(to_date(eh_day_period, 'DD-MM-YYYY'), 'YYYY-MM-DD') >= to_char(to_date(:from, 'DD-MM-YYYY'), 'YYYY-MM-DD'))
+                        OR
+                        (:from IS NULL AND :to IS NOT NULL AND to_char(to_date(eh_day_period, 'DD-MM-YYYY'), 'YYYY-MM-DD') <= to_char(to_date(:to, 'DD-MM-YYYY'), 'YYYY-MM-DD'))
+                    )
+                )
         """, nativeQuery = true)
-    Long findTotalByExternalEmployeeId(@Param("employeeId") Long employeeId, @Param("period") String period);
+    Long findTotalByExternalEmployeeId(@Param("employeeId") Long employeeId, @Param("period") String period, @Param("from") String from, @Param("to") String to);
 }

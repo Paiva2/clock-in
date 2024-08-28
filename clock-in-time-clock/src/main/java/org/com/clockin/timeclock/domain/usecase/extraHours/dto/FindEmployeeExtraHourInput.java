@@ -13,4 +13,6 @@ public class FindEmployeeExtraHourInput {
     private Integer page;
     private Integer perPage;
     private String period;
+    private String periodFrom;
+    private String periodTo;
 }

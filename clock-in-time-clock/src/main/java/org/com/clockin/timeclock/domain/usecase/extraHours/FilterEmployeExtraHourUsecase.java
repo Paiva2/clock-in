@@ -16,7 +16,6 @@ import org.com.clockin.timeclock.infra.dataProvider.external.EmployeeDataProvide
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
-import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 
 import java.util.Objects;
@@ -57,12 +56,27 @@ public class FilterEmployeExtraHourUsecase {
         }
 
         if (StringUtils.isNotBlank(input.getPeriod())) {
-            validatePeriodFormat(input.getPeriod());
+            validateInputDateFormat(input.getPeriod(), "period");
+        }
+
+        Boolean periodFromExists = StringUtils.isNotBlank(input.getPeriodFrom());
+        Boolean periodToExists = StringUtils.isNotBlank(input.getPeriodTo());
+
+        if (periodFromExists || periodToExists) {
+            input.setPeriod(null);
+
+            if (periodFromExists) {
+                validateInputDateFormat(input.getPeriodFrom(), "from");
+            }
+
+            if (periodToExists) {
+                validateInputDateFormat(input.getPeriodTo(), "to");
+            }
         }
     }
 
-    private void validatePeriodFormat(String period) {
-        dateValidatorStrategy.execute(period, "period");
+    private void validateInputDateFormat(String stringDate, String fieldName) {
+        dateValidatorStrategy.execute(stringDate, fieldName);
     }
 
     private Employee findEmployee(String externalAuth) {
@@ -84,13 +98,13 @@ public class FilterEmployeExtraHourUsecase {
     }
 
     private Page<ExtraHours> findAllEmployeeExtraHours(Long employeeId, FindEmployeeExtraHourInput input) {
-        Pageable pageable = PageRequest.of(input.getPage() - 1, input.getPerPage(), Sort.Direction.ASC, "EH_CREATED_AT");
+        Pageable pageable = PageRequest.of(input.getPage() - 1, input.getPerPage());
 
-        return extraHoursDataProvider.findAllByEmployee(employeeId, input.getPeriod(), pageable);
+        return extraHoursDataProvider.findAllByEmployee(employeeId, input.getPeriod(), input.getPeriodFrom(), input.getPeriodTo(), pageable);
     }
 
     private Long findTotalExtra(Long employeeId, FindEmployeeExtraHourInput input) {
-        return extraHoursDataProvider.findTotalByEmployee(employeeId, input.getPeriod());
+        return extraHoursDataProvider.findTotalByEmployee(employeeId, input.getPeriod(), input.getPeriodFrom(), input.getPeriodTo());
     }
 
     private String convertSeconds(Long seconds) {

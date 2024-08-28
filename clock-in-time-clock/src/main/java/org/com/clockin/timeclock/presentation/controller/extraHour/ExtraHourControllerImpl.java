@@ -15,12 +15,14 @@ public class ExtraHourControllerImpl implements ExtraHourController {
     private final FilterEmployeExtraHourUsecase filterEmployeExtraHourUsecase;
 
     @Override
-    public ResponseEntity<FilterEmployeeExtraHourOutput> getExtraHours(Jwt jwt, Integer page, Integer size, String period) {
+    public ResponseEntity<FilterEmployeeExtraHourOutput> getExtraHours(Jwt jwt, Integer page, Integer size, String period, String from, String to) {
         FilterEmployeeExtraHourOutput output = filterEmployeExtraHourUsecase.execute(mountBearer(jwt.getTokenValue()), FindEmployeeExtraHourInput
             .builder()
             .page(page)
             .perPage(size)
             .period(period)
+            .periodFrom(from)
+            .periodTo(to)
             .build()
         );
         return new ResponseEntity<>(output, HttpStatus.OK);

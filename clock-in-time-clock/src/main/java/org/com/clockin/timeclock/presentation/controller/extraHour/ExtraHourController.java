@@ -11,5 +11,5 @@ import org.springframework.web.bind.annotation.RequestParam;
 @RequestMapping("time-clock")
 public interface ExtraHourController {
     @GetMapping("/employee/extra-hours")
-    ResponseEntity<FilterEmployeeExtraHourOutput> getExtraHours(@AuthenticationPrincipal Jwt jwt, @RequestParam(value = "page", required = false, defaultValue = "1") Integer page, @RequestParam(value = "size", required = false, defaultValue = "20") Integer size, @RequestParam(value = "period", required = false) String period);
+    ResponseEntity<FilterEmployeeExtraHourOutput> getExtraHours(@AuthenticationPrincipal Jwt jwt, @RequestParam(value = "page", required = false, defaultValue = "1") Integer page, @RequestParam(value = "size", required = false, defaultValue = "20") Integer size, @RequestParam(value = "period", required = false) String period, @RequestParam(value = "from", required = false) String from, @RequestParam(value = "to", required = false) String to);
 }
