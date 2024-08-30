@@ -13,17 +13,16 @@ import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.web.bind.annotation.*;
 
-@RestController
 @RequestMapping("employee")
 public interface EmployeeController {
     @PostMapping("/register")
-    ResponseEntity<RegisterEmployeeOutput> registerEmployee(@AuthenticationPrincipal Jwt jwt, RegisterEmployeeInput input);
+    ResponseEntity<RegisterEmployeeOutput> registerEmployee(@AuthenticationPrincipal Jwt jwt, @RequestBody @Valid RegisterEmployeeInput input);
 
     @GetMapping("/list")
     ResponseEntity<ListEmployeesOutput> listEmployees(Integer page, Integer size, String name, String email, EnterprisePosition position);
 
     @GetMapping("/info")
-    ResponseEntity<EmployeeOutput> info(@AuthenticationPrincipal Jwt jwt);
+    ResponseEntity<EmployeeOutput> info(@AuthenticationPrincipal Jwt jwt, @RequestParam(value = "employeeId", required = false) Long employeeId);
 
     @PutMapping("/disable/{employeeId}")
     ResponseEntity<DisableEmployeeOutput> disableEmployee(@AuthenticationPrincipal Jwt jwt, @PathVariable("employeeId") Long employeeId);

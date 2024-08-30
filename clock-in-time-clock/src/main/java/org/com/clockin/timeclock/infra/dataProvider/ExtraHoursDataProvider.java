@@ -8,6 +8,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Component;
 
 import java.util.Optional;
+import java.util.UUID;
 
 @Component
 @AllArgsConstructor
@@ -28,5 +29,9 @@ public class ExtraHoursDataProvider {
 
     public ExtraHours persist(ExtraHours extraHours) {
         return extraHoursRepository.save(extraHours);
+    }
+
+    public void removeById(UUID id) {
+        extraHoursRepository.deleteById(id);
     }
 }

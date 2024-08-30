@@ -5,26 +5,14 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-import java.util.List;
-
 @AllArgsConstructor
 @NoArgsConstructor
 @Builder
 @Data
-public class Employee {
+public class EmployeeManager {
     private Long id;
     private String firstName;
     private String lastName;
     private String email;
     private String profilePictureUrl;
-    private Itinerary itinerary;
-    private List<EnterprisePosition> enterprisePositions;
-    private List<EmployeeManager> managers;
-
-    public enum EnterprisePosition {
-        HUMAN_RESOURCES,
-        EMPLOYEE,
-        MANAGER,
-        CEO
-    }
 }

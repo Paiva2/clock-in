@@ -1,6 +1,5 @@
 package org.com.clockinemployees.presentation.controller.employee;
 
-import jakarta.validation.Valid;
 import lombok.AllArgsConstructor;
 import org.com.clockinemployees.domain.enums.EnterprisePosition;
 import org.com.clockinemployees.domain.usecase.common.dto.EmployeeOutput;
@@ -17,10 +16,7 @@ import org.com.clockinemployees.domain.usecase.employee.registerEmployeeUsecase.
 import org.com.clockinemployees.domain.usecase.employee.registerEmployeeUsecase.dto.RegisterEmployeeOutput;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.oauth2.jwt.Jwt;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -35,8 +31,8 @@ public class EmployeeControllerImpl implements EmployeeController {
 
     @Override
     public ResponseEntity<RegisterEmployeeOutput> registerEmployee(
-        @AuthenticationPrincipal Jwt jwt,
-        @RequestBody @Valid RegisterEmployeeInput input
+        Jwt jwt,
+        RegisterEmployeeInput input
     ) {
         RegisterEmployeeOutput output = registerEmployeeUsecase.execute(jwt.getSubject(), input);
         return new ResponseEntity<>(output, HttpStatus.CREATED);
@@ -64,8 +60,8 @@ public class EmployeeControllerImpl implements EmployeeController {
 
     @Override
     public ResponseEntity<DisableEmployeeOutput> disableEmployee(
-        @AuthenticationPrincipal Jwt jwt,
-        @PathVariable("employeeId") Long employeeId
+        Jwt jwt,
+        Long employeeId
     ) {
         DisableEmployeeOutput output = disableEmployeeUsecase.execute(jwt.getSubject(), employeeId);
         return new ResponseEntity<>(output, HttpStatus.OK);
@@ -73,8 +69,8 @@ public class EmployeeControllerImpl implements EmployeeController {
 
     @Override
     public ResponseEntity<EmployeeOutput> updateProfile(
-        @AuthenticationPrincipal Jwt jwt,
-        @RequestBody @Valid EditEmployeeProfileInput input
+        Jwt jwt,
+        EditEmployeeProfileInput input
     ) {
         EmployeeOutput output = editEmployeeProfileUsecase.execute(jwt.getSubject(), input);
         return new ResponseEntity<>(output, HttpStatus.OK);
@@ -82,9 +78,10 @@ public class EmployeeControllerImpl implements EmployeeController {
 
     @Override
     public ResponseEntity<EmployeeOutput> info(
-        @AuthenticationPrincipal Jwt jwt
+        Jwt jwt,
+        Long employeeId
     ) {
-        EmployeeOutput output = getEmployeeProfileUsecase.execute(jwt.getSubject());
+        EmployeeOutput output = getEmployeeProfileUsecase.execute(jwt.getSubject(), employeeId);
         return new ResponseEntity<>(output, HttpStatus.OK);
     }
 }

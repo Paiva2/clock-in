@@ -38,7 +38,8 @@ public class SecurityConfig {
 
         http.csrf(AbstractHttpConfigurer::disable).authorizeHttpRequests(req ->
             req.dispatcherTypeMatchers(DispatcherType.ERROR).permitAll()
-                .anyRequest().permitAll()/*.authenticated()*/
+                .requestMatchers("/time-clock/approve/pending/*").hasAnyAuthority("ROLE_realm_admin", "ROLE_realm_human_resources", "ROLE_realm_manager")
+                .anyRequest().authenticated()
         );
 
         return http.build();

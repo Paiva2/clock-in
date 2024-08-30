@@ -1,6 +1,7 @@
 package org.com.clockin.timeclock.presentation.controller.pendingUpdateApprovalController;
 
 import lombok.AllArgsConstructor;
+import org.com.clockin.timeclock.domain.usecase.pendingUpdateApproval.approvePendingApprovalUsecase.ApprovePendingApprovalUsecase;
 import org.com.clockin.timeclock.domain.usecase.pendingUpdateApproval.cancelPendingUpdateApprovalUsecase.CancelPendingUpdateApprovalUsecase;
 import org.com.clockin.timeclock.domain.usecase.pendingUpdateApproval.createPendingUpdateApprovalUsecase.CreatePendingUpdateApprovalUsecase;
 import org.com.clockin.timeclock.domain.usecase.pendingUpdateApproval.createPendingUpdateApprovalUsecase.dto.RequestUpdateTimeClockOutput;
@@ -17,15 +18,22 @@ import java.util.UUID;
 public class PendingUpdateApprovalControllerImpl implements PendingUpdateApprovalController {
     private final CreatePendingUpdateApprovalUsecase createPendingUpdateApprovalUsecase;
     private final CancelPendingUpdateApprovalUsecase cancelPendingUpdateApprovalUsecase;
+    private final ApprovePendingApprovalUsecase approvePendingApprovalUsecase;
 
     @Override
-    public ResponseEntity<RequestUpdateTimeClockOutput> update(Jwt jwt, UUID timeClockId, UpdateTimeClockInput input) {
+    public ResponseEntity<RequestUpdateTimeClockOutput> create(Jwt jwt, UUID timeClockId, UpdateTimeClockInput input) {
         RequestUpdateTimeClockOutput output = createPendingUpdateApprovalUsecase.execute(
             mountBearer(jwt.getTokenValue()),
             timeClockId,
             input
         );
         return new ResponseEntity<>(output, HttpStatus.CREATED);
+    }
+
+    @Override
+    public ResponseEntity<Void> approve(Jwt jwt, UUID pendingId) {
+        approvePendingApprovalUsecase.execute(mountBearer(jwt.getTokenValue()), pendingId);
+        return new ResponseEntity<>(HttpStatus.NO_CONTENT);
     }
 
     @Override

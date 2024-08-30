@@ -2,22 +2,14 @@ package org.com.clockinemployees.domain.usecase.employee.getEmployeeProfileUseca
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;
-import org.com.clockinemployees.domain.entity.Employee;
-import org.com.clockinemployees.domain.entity.EmployeeManager;
-import org.com.clockinemployees.domain.entity.Itinerary;
-import org.com.clockinemployees.domain.entity.PersonalData;
+import org.com.clockinemployees.domain.entity.*;
 import org.com.clockinemployees.domain.usecase.common.dto.EmployeeOutput;
 import org.com.clockinemployees.domain.usecase.common.exception.EmployeeNotFoundException;
 import org.com.clockinemployees.domain.usecase.employee.editEmployeeProfileUsecase.exception.PersonalDataNotFoundException;
-import org.com.clockinemployees.infra.providers.EmployeeDataProvider;
-import org.com.clockinemployees.infra.providers.EmployeeManagerDataProvider;
-import org.com.clockinemployees.infra.providers.ItineraryDataProvider;
-import org.com.clockinemployees.infra.providers.PersonalDataDataProvider;
+import org.com.clockinemployees.infra.providers.*;
 import org.springframework.stereotype.Service;
 
-import java.util.List;
-import java.util.Objects;
-import java.util.Optional;
+import java.util.*;
 
 @Service
 @AllArgsConstructor
@@ -27,9 +19,17 @@ public class GetEmployeeProfileUsecase {
     private final PersonalDataDataProvider personalDataDataProvider;
     private final EmployeeManagerDataProvider employeeManagerDataProvider;
     private final ItineraryDataProvider itineraryDataProvider;
+    private final EmployeePositionDataProvider employeePositionDataProvider;
 
-    public EmployeeOutput execute(String employeeResourceServerId) {
-        Employee employee = findEmployee(employeeResourceServerId);
+    public EmployeeOutput execute(String employeeResourceServerId, Long employeeId) {
+        Employee employee;
+
+        if (Objects.isNull(employeeId)) {
+            employee = findEmployeeResourceServer(employeeResourceServerId);
+        } else {
+            Employee internalEmployee = findEmployee(employeeId);
+            employee = findEmployeeResourceServer(internalEmployee.getKeycloakId());
+        }
 
         if (Objects.nonNull(employee.getDisabledAt())) {
             throw new EmployeeNotFoundException();
@@ -41,11 +41,17 @@ public class GetEmployeeProfileUsecase {
 
         Itinerary itinerary = findEmployeeItinerary(employee.getId());
 
-        return mountOutput(employee, personalData, employeeManagers, itinerary);
+        Set<EmployeePosition> employeePositions = findEmployeePositions(employee.getId());
+
+        return mountOutput(employee, personalData, employeeManagers, itinerary, employeePositions);
     }
 
-    private Employee findEmployee(String employeeResourceServerId) {
+    private Employee findEmployeeResourceServer(String employeeResourceServerId) {
         return employeeDataProvider.findByResourceServerId(employeeResourceServerId).orElseThrow(EmployeeNotFoundException::new);
+    }
+
+    private Employee findEmployee(Long employeeId) {
+        return employeeDataProvider.findById(employeeId).orElseThrow(EmployeeNotFoundException::new);
     }
 
     private PersonalData findPersonalData(Long employeeId) {
@@ -62,9 +68,14 @@ public class GetEmployeeProfileUsecase {
         return itinerary.orElse(null);
     }
 
-    private EmployeeOutput mountOutput(Employee employee, PersonalData personalData, List<EmployeeManager> managers, Itinerary itinerary) {
+    private Set<EmployeePosition> findEmployeePositions(Long employeeId) {
+        return employeePositionDataProvider.findAllByEmployeeId(employeeId);
+    }
+
+    private EmployeeOutput mountOutput(Employee employee, PersonalData personalData, List<EmployeeManager> managers, Itinerary itinerary, Set<EmployeePosition> employeePositions) {
         employee.setEmployeeManagers(managers);
         employee.setPersonalData(personalData);
+        employee.setEmployeePositions(new ArrayList<>(employeePositions));
 
         return EmployeeOutput.toDto(employee, itinerary);
     }

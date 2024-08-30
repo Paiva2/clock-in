@@ -14,4 +14,8 @@ public class EmployeeDataProvider {
     public ResponseEntity<Employee> findEmployeeByResourceServerId(String externalAuthToken) {
         return employeeClient.getEmployeeInfo(externalAuthToken);
     }
+
+    public ResponseEntity<Employee> findEmployeeByBasicId(String externalAuthToken, Long employeeId) {
+        return employeeClient.getEmployeeInfo(externalAuthToken, employeeId);
+    }
 }

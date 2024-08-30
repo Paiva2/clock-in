@@ -22,6 +22,10 @@ public class PendingUpdateApprovalDataProvider {
         return pendingUpdateApprovalRepository.findByIdAndEmployeeId(pendingUpdateId, externalEmployeeId);
     }
 
+    public Optional<PendingUpdateApproval> findById(UUID pendingUpdateId) {
+        return pendingUpdateApprovalRepository.findByIdWithDeps(pendingUpdateId);
+    }
+
     public void removePendingUpdateApproval(UUID updateApprovalId) {
         pendingUpdateApprovalRepository.deleteById(updateApprovalId);
     }

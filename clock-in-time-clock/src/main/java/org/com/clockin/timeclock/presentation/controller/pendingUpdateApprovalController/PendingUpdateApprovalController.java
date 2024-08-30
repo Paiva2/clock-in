@@ -12,9 +12,12 @@ import java.util.UUID;
 
 @RequestMapping("time-clock")
 public interface PendingUpdateApprovalController {
-    @PostMapping("/update/{timeClockId}")
-    ResponseEntity<RequestUpdateTimeClockOutput> update(@AuthenticationPrincipal Jwt jwt, @PathVariable("timeClockId") UUID timeClockId, @RequestBody @Valid UpdateTimeClockInput input);
+    @PostMapping("/create/pending/{timeClockId}")
+    ResponseEntity<RequestUpdateTimeClockOutput> create(@AuthenticationPrincipal Jwt jwt, @PathVariable("timeClockId") UUID timeClockId, @RequestBody @Valid UpdateTimeClockInput input);
 
-    @DeleteMapping("/cancel/{pendingApprovalId}")
+    @PatchMapping("/approve/pending/{pendingId}")
+    ResponseEntity<Void> approve(@AuthenticationPrincipal Jwt jwt, @PathVariable("pendingId") UUID pendingId);
+
+    @DeleteMapping("/cancel/pending/{pendingApprovalId}")
     ResponseEntity<Void> cancel(@AuthenticationPrincipal Jwt jwt, @PathVariable("pendingApprovalId") UUID pendingApprovalId);
 }
