@@ -18,7 +18,7 @@ public class Employee {
     private String email;
     private String profilePictureUrl;
     private Itinerary itinerary;
-    private List<EnterprisePosition> enterprisePositions;
+    private List<EnterprisePosition> enterprisePosition;
     private List<EmployeeManager> managers;
 
     public enum EnterprisePosition {

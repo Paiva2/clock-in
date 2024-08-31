@@ -26,6 +26,7 @@ import java.util.*;
 import static org.com.clockin.timeclock.domain.entity.TimeClock.Event.*;
 import static org.com.clockin.timeclock.domain.entity.TimeClock.Event.INTERVAL_OUT;
 
+//TODO: TESTAR
 @AllArgsConstructor
 @Service
 public class ApprovePendingApprovalUsecase {
@@ -79,7 +80,7 @@ public class ApprovePendingApprovalUsecase {
         String pendingApprovalYear = DateHandler.extractYearFromDate(pendingUpdateApproval.getTimeClockUpdated());
 
         String currentMonth = DateHandler.extractMonthFromDate(new Date());
-        String currentYear = DateHandler.extractMonthFromDate(new Date());
+        String currentYear = DateHandler.extractYearFromDate(new Date());
 
         boolean pendingAndTimeClockedSameDay = timeClockDay.equals(pendingApprovalDay);
         boolean pendingAndTimeClockedSameMonth = timeClockMonth.equals(pendingApprovalMonth);
@@ -224,7 +225,7 @@ public class ApprovePendingApprovalUsecase {
     }
 
     private Boolean superiorHasProvidedPermission(Employee.EnterprisePosition position, Employee employee) {
-        return employee.getEnterprisePositions().contains(position);
+        return employee.getEnterprisePosition().contains(position);
     }
 
     private void checkSuperiorIsEmployeeManager(Employee superior, Employee employee) {

@@ -24,11 +24,10 @@ public interface PendingUpdateApprovalRepository extends JpaRepository<PendingUp
             SELECT pua FROM PendingUpdateApproval pua
             JOIN FETCH pua.timeClock tc
             WHERE pua.id = :pendingUpdateId
-            AND pua.approved = null
         """)
     Optional<PendingUpdateApproval> findByIdWithDeps(@Param("pendingUpdateId") UUID pendingUpdateId);
 
     List<PendingUpdateApproval> findAllByTimeClockId(UUID timeClockId);
-    
+
     void deleteAllByTimeClockId(UUID timeClockId);
 }
