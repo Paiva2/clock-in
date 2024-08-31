@@ -20,6 +20,7 @@ public class TimeClockFilterOutput {
     private UUID id;
     private Long externalEmployeeId;
     private Date timeClocked;
+    private String timeClockedFormatted;
     private TimeClock.Event eventType;
     private Date updatedAt;
     private String day;
@@ -32,6 +33,7 @@ public class TimeClockFilterOutput {
             .id(timeClock.getId())
             .externalEmployeeId(timeClock.getExternalEmployeeId())
             .timeClocked(timeClock.getTimeClocked())
+            .timeClockedFormatted(DateHandler.formatDateToOutput(timeClock.getTimeClocked()))
             .eventType(timeClock.getEvent())
             .updatedAt(timeClock.getUpdatedAt())
             .day(DateHandler.extractDayNumberFromDate(timeClock.getTimeClocked()))
@@ -48,6 +50,7 @@ public class TimeClockFilterOutput {
     public static class UpdateApprovals {
         private UUID id;
         private Date timeClockUpdated;
+        private String timeClockedUpdatedFormatted;
         private Boolean approved;
         private String reason;
         private Date createdAt;
@@ -61,6 +64,7 @@ public class TimeClockFilterOutput {
                 .createdAt(pendingUpdateApproval.getCreatedAt())
                 .updatedAt(pendingUpdateApproval.getUpdatedAt())
                 .timeClockUpdated(pendingUpdateApproval.getTimeClockUpdated())
+                .timeClockedUpdatedFormatted(DateHandler.formatDateToOutput(pendingUpdateApproval.getTimeClockUpdated()))
                 .build();
         }
     }

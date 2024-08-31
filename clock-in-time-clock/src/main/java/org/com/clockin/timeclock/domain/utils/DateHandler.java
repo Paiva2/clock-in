@@ -14,16 +14,22 @@ import java.util.Date;
 
 @Component
 public class DateHandler {
+    private final static String OUTPUT_PATTERN = "dd/MM/yyyy HH:mm:ss";
+
     public Date parseDate(String date, String pattern) throws ParseException {
         DateFormat formatter = new SimpleDateFormat(pattern);
 
         return formatter.parse(date);
     }
 
-    public String formatDate(Date date, String pattern) {
+    public static String formatDate(Date date, String pattern) {
         DateFormat formatter = new SimpleDateFormat(pattern);
 
         return formatter.format(date);
+    }
+
+    public static String formatDateToOutput(Date date) {
+        return formatDate(date, OUTPUT_PATTERN);
     }
 
     public ZonedDateTime getTodayOnMaxHour() {
