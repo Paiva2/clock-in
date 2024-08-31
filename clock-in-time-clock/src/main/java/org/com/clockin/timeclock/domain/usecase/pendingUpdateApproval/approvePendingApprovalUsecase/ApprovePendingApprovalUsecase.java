@@ -26,7 +26,6 @@ import java.util.*;
 import static org.com.clockin.timeclock.domain.entity.TimeClock.Event.*;
 import static org.com.clockin.timeclock.domain.entity.TimeClock.Event.INTERVAL_OUT;
 
-//TODO: TESTAR
 @AllArgsConstructor
 @Service
 public class ApprovePendingApprovalUsecase {
