@@ -77,6 +77,6 @@ public class GetEmployeeProfileUsecase {
         employee.setPersonalData(personalData);
         employee.setEmployeePositions(new ArrayList<>(employeePositions));
 
-        return EmployeeOutput.toDto(employee, itinerary);
+        return EmployeeOutput.toDto(employee);
     }
 }

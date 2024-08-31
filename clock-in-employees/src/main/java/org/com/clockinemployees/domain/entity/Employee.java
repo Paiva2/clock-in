@@ -53,6 +53,9 @@ public class Employee {
     @OneToOne(mappedBy = "employee", fetch = FetchType.LAZY)
     private PersonalData personalData;
 
+    @OneToOne(mappedBy = "employee", fetch = FetchType.LAZY)
+    private Itinerary itinerary;
+
     @OneToMany(mappedBy = "employee", fetch = FetchType.LAZY)
     private List<EmployeeSystemRole> employeeSystemRoles;
 

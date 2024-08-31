@@ -14,10 +14,12 @@ import org.com.clockinemployees.domain.usecase.employee.listEmployees.dto.ListEm
 import org.com.clockinemployees.domain.usecase.employee.registerEmployeeUsecase.RegisterEmployeeUsecase;
 import org.com.clockinemployees.domain.usecase.employee.registerEmployeeUsecase.dto.RegisterEmployeeInput;
 import org.com.clockinemployees.domain.usecase.employee.registerEmployeeUsecase.dto.RegisterEmployeeOutput;
+import org.com.clockinemployees.domain.usecase.manager.listManagerEmployeesUsecase.ListManagerEmployeesUsecase;
+import org.com.clockinemployees.domain.usecase.manager.listManagerEmployeesUsecase.dto.ListManagerEmployeesInput;
+import org.com.clockinemployees.domain.usecase.manager.listManagerEmployeesUsecase.dto.ListManagerEmployeesOutput;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.oauth2.jwt.Jwt;
-import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 @RestController
@@ -28,6 +30,7 @@ public class EmployeeControllerImpl implements EmployeeController {
     private final DisableEmployeeUsecase disableEmployeeUsecase;
     private final EditEmployeeProfileUsecase editEmployeeProfileUsecase;
     private final GetEmployeeProfileUsecase getEmployeeProfileUsecase;
+    private final ListManagerEmployeesUsecase listManagerEmployeesUsecase;
 
     @Override
     public ResponseEntity<RegisterEmployeeOutput> registerEmployee(
@@ -40,11 +43,11 @@ public class EmployeeControllerImpl implements EmployeeController {
 
     @Override
     public ResponseEntity<ListEmployeesOutput> listEmployees(
-        @RequestParam(name = "page", required = false, defaultValue = "1") Integer page,
-        @RequestParam(name = "size", required = false, defaultValue = "20") Integer size,
-        @RequestParam(name = "name", required = false) String name,
-        @RequestParam(name = "email", required = false) String email,
-        @RequestParam(name = "position", required = false) EnterprisePosition position
+        Integer page,
+        Integer size,
+        String name,
+        String email,
+        EnterprisePosition position
     ) {
         ListEmployeesOutput output = listEmployeesUsecase.execute(ListEmployeesInput.builder()
             .name(name)
@@ -73,6 +76,18 @@ public class EmployeeControllerImpl implements EmployeeController {
         EditEmployeeProfileInput input
     ) {
         EmployeeOutput output = editEmployeeProfileUsecase.execute(jwt.getSubject(), input);
+        return new ResponseEntity<>(output, HttpStatus.OK);
+    }
+
+    @Override
+    public ResponseEntity<ListManagerEmployeesOutput> listManaging(Jwt jwt, Integer page, Integer size, String name) {
+        ListManagerEmployeesOutput output = listManagerEmployeesUsecase.execute(jwt.getSubject(), ListManagerEmployeesInput.builder()
+            .page(page)
+            .size(size)
+            .name(name)
+            .build()
+        );
+
         return new ResponseEntity<>(output, HttpStatus.OK);
     }
 

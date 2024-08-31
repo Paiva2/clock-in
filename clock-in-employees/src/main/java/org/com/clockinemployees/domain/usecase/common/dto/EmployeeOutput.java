@@ -1,11 +1,9 @@
 package org.com.clockinemployees.domain.usecase.common.dto;
 
-import com.fasterxml.jackson.annotation.JsonInclude;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import org.com.clockinemployees.domain.entity.Employee;
-import org.com.clockinemployees.domain.entity.Itinerary;
 import org.com.clockinemployees.domain.enums.EnterprisePosition;
 
 import java.util.List;
@@ -20,32 +18,10 @@ public class EmployeeOutput {
     private String lastName;
     private String email;
     private String profilePictureUrl;
-
-    @JsonInclude(JsonInclude.Include.NON_NULL)
     private List<EnterprisePosition> enterprisePosition;
-
-    @JsonInclude(JsonInclude.Include.NON_NULL)
     private ItineraryOutput itinerary;
-
-    @JsonInclude(JsonInclude.Include.NON_NULL)
     private List<ManagerOutput> managers;
-
-    @JsonInclude(JsonInclude.Include.NON_NULL)
-    private PersonalDataOutput personalDataOutput;
-
-    public static EmployeeOutput toDto(Employee employee, Itinerary itinerary) {
-        return EmployeeOutput.builder()
-            .id(employee.getId())
-            .firstName(employee.getFirstName())
-            .lastName(employee.getLastName())
-            .email(employee.getEmail())
-            .profilePictureUrl(employee.getProfilePictureUrl())
-            .managers(employee.getEmployeeManagers().stream().map(ManagerOutput::toDto).toList())
-            .enterprisePosition(employee.getEmployeePositions().stream().map(position -> position.getPosition().getName()).toList())
-            .personalDataOutput(PersonalDataOutput.toDto(employee.getPersonalData()))
-            .itinerary(Objects.nonNull(itinerary) ? ItineraryOutput.toDto(itinerary) : null)
-            .build();
-    }
+    private PersonalDataOutput personalData;
 
     public static EmployeeOutput toDto(Employee employee) {
         return EmployeeOutput.builder()
@@ -54,9 +30,10 @@ public class EmployeeOutput {
             .lastName(employee.getLastName())
             .email(employee.getEmail())
             .profilePictureUrl(employee.getProfilePictureUrl())
-            .managers(employee.getEmployeeManagers().stream().map(ManagerOutput::toDto).toList())
-            .enterprisePosition(employee.getEmployeePositions().stream().map(position -> position.getPosition().getName()).toList())
-            .personalDataOutput(PersonalDataOutput.toDto(employee.getPersonalData()))
+            .personalData(Objects.nonNull(employee.getPersonalData()) ? PersonalDataOutput.toDto(employee.getPersonalData()) : null)
+            .enterprisePosition(Objects.nonNull(employee.getEmployeePositions()) ? employee.getEmployeePositions().stream().map(position -> position.getPosition().getName()).toList() : null)
+            .itinerary(Objects.nonNull(employee.getItinerary()) ? ItineraryOutput.toDto(employee.getItinerary()) : null)
+            .managers(Objects.nonNull(employee.getEmployeeManagers()) ? employee.getEmployeeManagers().stream().map(ManagerOutput::toDto).toList() : null)
             .build();
     }
 }

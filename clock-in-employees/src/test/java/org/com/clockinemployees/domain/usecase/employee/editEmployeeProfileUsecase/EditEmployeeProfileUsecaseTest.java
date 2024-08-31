@@ -662,8 +662,8 @@ class EditEmployeeProfileUsecaseTest {
         assertEquals(output.getProfilePictureUrl(), mockEmployeeUpdated.getProfilePictureUrl());
         assertEquals(output.getFirstName(), mockEmployeeUpdated.getFirstName());
         assertEquals(output.getLastName(), mockEmployeeUpdated.getLastName());
-        assertEquals(output.getPersonalDataOutput().getZipcode(), mockPersonalData.getZipcode());
-        assertEquals(output.getPersonalDataOutput().getState(), mockPersonalData.getState());
-        assertEquals(output.getPersonalDataOutput().getCity(), mockPersonalData.getCity());
+        assertEquals(output.getPersonalData().getZipcode(), mockPersonalData.getZipcode());
+        assertEquals(output.getPersonalData().getState(), mockPersonalData.getState());
+        assertEquals(output.getPersonalData().getCity(), mockPersonalData.getCity());
     }
 }
