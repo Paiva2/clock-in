@@ -18,6 +18,9 @@ public interface PendingUpdateApprovalController {
     @PatchMapping("/approve/pending/{pendingId}")
     ResponseEntity<Void> approve(@AuthenticationPrincipal Jwt jwt, @PathVariable("pendingId") UUID pendingId);
 
+    @PatchMapping("/deny/pending/{pendingId}")
+    ResponseEntity<Void> deny(@AuthenticationPrincipal Jwt jwt, @PathVariable("pendingId") UUID pendingId);
+
     @DeleteMapping("/cancel/pending/{pendingApprovalId}")
     ResponseEntity<Void> cancel(@AuthenticationPrincipal Jwt jwt, @PathVariable("pendingApprovalId") UUID pendingApprovalId);
 }

@@ -6,6 +6,7 @@ import org.com.clockin.timeclock.domain.usecase.pendingUpdateApproval.cancelPend
 import org.com.clockin.timeclock.domain.usecase.pendingUpdateApproval.createPendingUpdateApprovalUsecase.CreatePendingUpdateApprovalUsecase;
 import org.com.clockin.timeclock.domain.usecase.pendingUpdateApproval.createPendingUpdateApprovalUsecase.dto.RequestUpdateTimeClockOutput;
 import org.com.clockin.timeclock.domain.usecase.pendingUpdateApproval.createPendingUpdateApprovalUsecase.dto.UpdateTimeClockInput;
+import org.com.clockin.timeclock.domain.usecase.pendingUpdateApproval.denyPendingUpdateApprovalUsecase.DenyPendingUpdateApprovalUsecase;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.oauth2.jwt.Jwt;
@@ -19,6 +20,7 @@ public class PendingUpdateApprovalControllerImpl implements PendingUpdateApprova
     private final CreatePendingUpdateApprovalUsecase createPendingUpdateApprovalUsecase;
     private final CancelPendingUpdateApprovalUsecase cancelPendingUpdateApprovalUsecase;
     private final ApprovePendingApprovalUsecase approvePendingApprovalUsecase;
+    private final DenyPendingUpdateApprovalUsecase denyPendingUpdateApprovalUsecase;
 
     @Override
     public ResponseEntity<RequestUpdateTimeClockOutput> create(Jwt jwt, UUID timeClockId, UpdateTimeClockInput input) {
@@ -33,6 +35,12 @@ public class PendingUpdateApprovalControllerImpl implements PendingUpdateApprova
     @Override
     public ResponseEntity<Void> approve(Jwt jwt, UUID pendingId) {
         approvePendingApprovalUsecase.execute(mountBearer(jwt.getTokenValue()), pendingId);
+        return new ResponseEntity<>(HttpStatus.NO_CONTENT);
+    }
+
+    @Override
+    public ResponseEntity<Void> deny(Jwt jwt, UUID pendingId) {
+        denyPendingUpdateApprovalUsecase.execute(mountBearer(jwt.getTokenValue()), pendingId);
         return new ResponseEntity<>(HttpStatus.NO_CONTENT);
     }
 
