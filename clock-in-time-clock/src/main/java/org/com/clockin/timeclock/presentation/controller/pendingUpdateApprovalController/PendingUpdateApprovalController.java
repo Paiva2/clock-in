@@ -3,6 +3,7 @@ package org.com.clockin.timeclock.presentation.controller.pendingUpdateApprovalC
 import jakarta.validation.Valid;
 import org.com.clockin.timeclock.domain.usecase.pendingUpdateApproval.createPendingUpdateApprovalUsecase.dto.RequestUpdateTimeClockOutput;
 import org.com.clockin.timeclock.domain.usecase.pendingUpdateApproval.createPendingUpdateApprovalUsecase.dto.UpdateTimeClockInput;
+import org.com.clockin.timeclock.domain.usecase.pendingUpdateApproval.listEmployeePendingApprovals.dto.ListEmployeePendingApprovalOutput;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.oauth2.jwt.Jwt;
@@ -23,4 +24,7 @@ public interface PendingUpdateApprovalController {
 
     @DeleteMapping("/cancel/pending/{pendingApprovalId}")
     ResponseEntity<Void> cancel(@AuthenticationPrincipal Jwt jwt, @PathVariable("pendingApprovalId") UUID pendingApprovalId);
+
+    @GetMapping("/list/pending/{employeeId}")
+    ResponseEntity<ListEmployeePendingApprovalOutput> listEmployeePendingApprovals(@AuthenticationPrincipal Jwt jwt, @PathVariable("employeeId") Long employeeId, @RequestParam(value = "page", required = false, defaultValue = "1") Integer page, @RequestParam(value = "size", required = false, defaultValue = "20") Integer size);
 }

@@ -7,6 +7,9 @@ import org.com.clockin.timeclock.domain.usecase.pendingUpdateApproval.createPend
 import org.com.clockin.timeclock.domain.usecase.pendingUpdateApproval.createPendingUpdateApprovalUsecase.dto.RequestUpdateTimeClockOutput;
 import org.com.clockin.timeclock.domain.usecase.pendingUpdateApproval.createPendingUpdateApprovalUsecase.dto.UpdateTimeClockInput;
 import org.com.clockin.timeclock.domain.usecase.pendingUpdateApproval.denyPendingUpdateApprovalUsecase.DenyPendingUpdateApprovalUsecase;
+import org.com.clockin.timeclock.domain.usecase.pendingUpdateApproval.listEmployeePendingApprovals.ListEmployeePendingApprovalsUsecase;
+import org.com.clockin.timeclock.domain.usecase.pendingUpdateApproval.listEmployeePendingApprovals.dto.ListEmployeePendingApprovalOutput;
+import org.com.clockin.timeclock.domain.usecase.pendingUpdateApproval.listEmployeePendingApprovals.dto.ListEmployeePendingApprovalsInput;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.oauth2.jwt.Jwt;
@@ -21,6 +24,7 @@ public class PendingUpdateApprovalControllerImpl implements PendingUpdateApprova
     private final CancelPendingUpdateApprovalUsecase cancelPendingUpdateApprovalUsecase;
     private final ApprovePendingApprovalUsecase approvePendingApprovalUsecase;
     private final DenyPendingUpdateApprovalUsecase denyPendingUpdateApprovalUsecase;
+    private final ListEmployeePendingApprovalsUsecase listEmployeePendingApprovalsUsecase;
 
     @Override
     public ResponseEntity<RequestUpdateTimeClockOutput> create(Jwt jwt, UUID timeClockId, UpdateTimeClockInput input) {
@@ -48,6 +52,16 @@ public class PendingUpdateApprovalControllerImpl implements PendingUpdateApprova
     public ResponseEntity<Void> cancel(Jwt jwt, UUID pendingApprovalId) {
         cancelPendingUpdateApprovalUsecase.execute(mountBearer(jwt.getTokenValue()), pendingApprovalId);
         return new ResponseEntity<>(HttpStatus.OK);
+    }
+
+    @Override
+    public ResponseEntity<ListEmployeePendingApprovalOutput> listEmployeePendingApprovals(Jwt jwt, Long employeeId, Integer page, Integer size) {
+        ListEmployeePendingApprovalOutput output = listEmployeePendingApprovalsUsecase.execute(mountBearer(jwt.getTokenValue()), employeeId, ListEmployeePendingApprovalsInput.builder()
+            .page(page)
+            .size(size)
+            .build()
+        );
+        return new ResponseEntity<>(output, HttpStatus.OK);
     }
 
     private String mountBearer(String token) {

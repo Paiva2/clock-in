@@ -1,6 +1,8 @@
 package org.com.clockin.timeclock.infra.repository;
 
 import org.com.clockin.timeclock.domain.entity.PendingUpdateApproval;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -26,6 +28,15 @@ public interface PendingUpdateApprovalRepository extends JpaRepository<PendingUp
             WHERE pua.id = :pendingUpdateId
         """)
     Optional<PendingUpdateApproval> findByIdWithDeps(@Param("pendingUpdateId") UUID pendingUpdateId);
+
+    @Query(value = """
+            SELECT pua FROM PendingUpdateApproval pua
+            JOIN FETCH pua.timeClock tc
+            WHERE pua.approved IS NULL
+            AND tc.externalEmployeeId = :employeeId
+            ORDER BY pua.timeClockUpdated ASC
+        """)
+    Page<PendingUpdateApproval> findByEmployeeId(@Param("employeeId") Long employeeId, Pageable pageable);
 
     List<PendingUpdateApproval> findAllByTimeClockId(UUID timeClockId);
 

@@ -206,7 +206,7 @@ class GetEmployeeProfileUsecaseTest {
         when(personalDataDataProvider.findByEmployeeId(mockEmployee.getId())).thenReturn(Optional.of(mockPersonalData));
         when(employeeManagerDataProvider.findEmployeeManagers(mockEmployee.getId())).thenReturn(mockEmployeeManagers);
 
-        EmployeeOutput output = sut.execute(mockEmployeeResourceServerId);
+        EmployeeOutput output = sut.execute(mockEmployeeResourceServerId, null);
 
         assertEquals(output.getId(), mockEmployee.getId());
         assertEquals(output.getEmail(), mockEmployee.getEmail());
