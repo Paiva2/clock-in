@@ -26,4 +26,8 @@ public class EmployeeManagerDataProvider {
     public Page<EmployeeManager> findManagerEmployees(Long managerId, String employeeName, Pageable pageable) {
         return employeeManagerRepository.findAllByManagerId(managerId, employeeName, pageable);
     }
+
+    public EmployeeManager save(EmployeeManager employeeManager) {
+        return employeeManagerRepository.save(employeeManager);
+    }
 }

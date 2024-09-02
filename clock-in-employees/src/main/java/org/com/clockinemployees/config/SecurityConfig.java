@@ -43,6 +43,7 @@ public class SecurityConfig {
                 .requestMatchers("/employee/positions/list").hasAnyAuthority("ROLE_realm_ceo", "ROLE_realm_human_resources")
                 .requestMatchers("/employee/disable/{employeeId}").hasAnyAuthority("ROLE_realm_ceo", "ROLE_realm_human_resources", "ROLE_realm_manager")
                 .requestMatchers("/employee/managing/list").hasAnyAuthority("ROLE_realm_ceo", "ROLE_realm_human_resources", "ROLE_realm_manager")
+                .requestMatchers("/employee/{employeeId}/manager/{managerId}").hasAnyAuthority("ROLE_realm_ceo", "ROLE_realm_human_resources")
                 .anyRequest().authenticated()
         );
 
