@@ -3,11 +3,14 @@ package org.com.clockin.timeclock.presentation.controller.timeClockController;
 import lombok.AllArgsConstructor;
 import org.com.clockin.timeclock.domain.usecase.timeClock.deleteTimeClockUsecase.DeleteTimeClockUsecase;
 import org.com.clockin.timeclock.domain.usecase.timeClock.deleteTimeClockUsecase.dto.DeleteTimeClockUsecaseOutput;
+import org.com.clockin.timeclock.domain.usecase.timeClock.filterEmployeeTimeClockUsecase.FilterEmployeeTimeClockUsecase;
+import org.com.clockin.timeclock.domain.usecase.timeClock.filterEmployeeTimeClockUsecase.dto.FilterEmployeeTimeClockInput;
 import org.com.clockin.timeclock.domain.usecase.timeClock.filterTimeClockUsecase.FilterTimeClockUsecase;
 import org.com.clockin.timeclock.domain.usecase.timeClock.filterTimeClockUsecase.dto.FilterTimeClockOutput;
 import org.com.clockin.timeclock.domain.usecase.timeClock.listTimeClockedUsecase.ListTimeClockedUsecase;
 import org.com.clockin.timeclock.domain.usecase.timeClock.listTimeClockedUsecase.dto.ListTimeClockedInputFilters;
 import org.com.clockin.timeclock.domain.usecase.timeClock.listTimeClockedUsecase.dto.ListTimeClockedOutput;
+import org.com.clockin.timeclock.domain.usecase.timeClock.listTimeClockedUsecase.dto.TimeClockListDTO;
 import org.com.clockin.timeclock.domain.usecase.timeClock.registerTimeClockUsecase.RegisterTimeClockUsecase;
 import org.com.clockin.timeclock.domain.usecase.timeClock.registerTimeClockUsecase.dto.RegisterTimeClockInput;
 import org.com.clockin.timeclock.domain.usecase.timeClock.registerTimeClockUsecase.dto.RegisterTimeClockOutput;
@@ -16,6 +19,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.web.bind.annotation.RestController;
 
+import java.util.LinkedHashMap;
 import java.util.UUID;
 
 @RestController
@@ -25,6 +29,7 @@ public class TimeClockControllerImpl implements TimeClockController {
     private final ListTimeClockedUsecase listTimeClockedUsecase;
     private final DeleteTimeClockUsecase deleteTimeClockUsecase;
     private final FilterTimeClockUsecase filterTimeClockUsecase;
+    private final FilterEmployeeTimeClockUsecase filterEmployeeTimeClockUsecase;
 
     @Override
     public ResponseEntity<RegisterTimeClockOutput> register(Jwt jwt, RegisterTimeClockInput input) {
@@ -53,6 +58,21 @@ public class TimeClockControllerImpl implements TimeClockController {
     @Override
     public ResponseEntity<FilterTimeClockOutput> filterSingle(Jwt jwt, UUID timeClockId) {
         FilterTimeClockOutput output = filterTimeClockUsecase.execute(mountBearer(jwt.getTokenValue()), timeClockId);
+        return new ResponseEntity<>(output, HttpStatus.OK);
+    }
+
+    @Override
+    public ResponseEntity<LinkedHashMap<String, TimeClockListDTO>> listEmployeeTimeClock(
+        Jwt jwt,
+        Long employeeId,
+        Integer month,
+        Integer year
+    ) {
+        LinkedHashMap<String, TimeClockListDTO> output = filterEmployeeTimeClockUsecase.execute(mountBearer(jwt.getTokenValue()), employeeId, FilterEmployeeTimeClockInput.builder()
+            .month(month)
+            .year(year)
+            .build());
+
         return new ResponseEntity<>(output, HttpStatus.OK);
     }
 

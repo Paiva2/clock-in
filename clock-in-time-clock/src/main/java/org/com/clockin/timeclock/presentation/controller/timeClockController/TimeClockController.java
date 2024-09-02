@@ -4,6 +4,7 @@ import jakarta.validation.Valid;
 import org.com.clockin.timeclock.domain.usecase.timeClock.deleteTimeClockUsecase.dto.DeleteTimeClockUsecaseOutput;
 import org.com.clockin.timeclock.domain.usecase.timeClock.filterTimeClockUsecase.dto.FilterTimeClockOutput;
 import org.com.clockin.timeclock.domain.usecase.timeClock.listTimeClockedUsecase.dto.ListTimeClockedOutput;
+import org.com.clockin.timeclock.domain.usecase.timeClock.listTimeClockedUsecase.dto.TimeClockListDTO;
 import org.com.clockin.timeclock.domain.usecase.timeClock.registerTimeClockUsecase.dto.RegisterTimeClockInput;
 import org.com.clockin.timeclock.domain.usecase.timeClock.registerTimeClockUsecase.dto.RegisterTimeClockOutput;
 import org.springframework.http.ResponseEntity;
@@ -11,6 +12,7 @@ import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.LinkedHashMap;
 import java.util.UUID;
 
 @RestController
@@ -27,4 +29,7 @@ public interface TimeClockController {
 
     @GetMapping("/{timeClockId}")
     ResponseEntity<FilterTimeClockOutput> filterSingle(@AuthenticationPrincipal Jwt jwt, @PathVariable("timeClockId") UUID timeClockId);
+
+    @GetMapping("/employee/{employeeId}/list")
+    ResponseEntity<LinkedHashMap<String, TimeClockListDTO>> listEmployeeTimeClock(@AuthenticationPrincipal Jwt jwt, @PathVariable("employeeId") Long employeeId, @RequestParam("month") Integer month, @RequestParam("year") Integer year);
 }
