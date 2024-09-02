@@ -38,9 +38,10 @@ public class SecurityConfig {
 
         http.csrf(AbstractHttpConfigurer::disable).authorizeHttpRequests(req ->
             req.dispatcherTypeMatchers(DispatcherType.ERROR).permitAll()
-                .requestMatchers("/time-clock/approve/pending/*").hasAnyAuthority("ROLE_realm_admin", "ROLE_realm_human_resources", "ROLE_realm_manager")
-                .requestMatchers("/time-clock/deny/pending/*").hasAnyAuthority("ROLE_realm_admin", "ROLE_realm_human_resources", "ROLE_realm_manager")
-                .requestMatchers("/time-clock/list/pending/*").hasAnyAuthority("ROLE_realm_admin", "ROLE_realm_human_resources", "ROLE_realm_manager")
+                .requestMatchers("/time-clock/approve/pending/*").hasAnyAuthority("ROLE_realm_ceo", "ROLE_realm_human_resources", "ROLE_realm_manager")
+                .requestMatchers("/time-clock/deny/pending/*").hasAnyAuthority("ROLE_realm_ceo", "ROLE_realm_human_resources", "ROLE_realm_manager")
+                .requestMatchers("/time-clock/list/pending/*").hasAnyAuthority("ROLE_realm_ceo", "ROLE_realm_human_resources", "ROLE_realm_manager")
+                .requestMatchers("/time-clock/employee/{employeeId}/list").hasAnyAuthority("ROLE_realm_ceo", "ROLE_realm_human_resources", "ROLE_realm_manager")
                 .anyRequest().authenticated()
         );
 

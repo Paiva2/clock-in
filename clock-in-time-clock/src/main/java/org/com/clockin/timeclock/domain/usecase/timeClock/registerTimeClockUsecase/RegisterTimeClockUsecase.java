@@ -14,6 +14,7 @@ import org.com.clockin.timeclock.domain.usecase.timeClock.registerTimeClockUseca
 import org.com.clockin.timeclock.domain.usecase.timeClock.registerTimeClockUsecase.dto.RegisterTimeClockInput;
 import org.com.clockin.timeclock.domain.usecase.timeClock.registerTimeClockUsecase.dto.RegisterTimeClockOutput;
 import org.com.clockin.timeclock.domain.usecase.timeClock.registerTimeClockUsecase.exception.EmployeeNotFoundException;
+import org.com.clockin.timeclock.domain.usecase.timeClock.registerTimeClockUsecase.exception.ItineraryNotFoundException;
 import org.com.clockin.timeclock.domain.usecase.timeClock.registerTimeClockUsecase.exception.MaxTimeClockedExceptionForDay;
 import org.com.clockin.timeclock.domain.usecase.timeClock.registerTimeClockUsecase.exception.NecessaryEventMissingException;
 import org.com.clockin.timeclock.domain.utils.DateHandler;
@@ -48,6 +49,10 @@ public class RegisterTimeClockUsecase {
         validateInputClockedTime(input.getTimeClocked());
 
         Employee employee = findEmployee(externalAuthorization);
+
+        if (Objects.isNull(employee.getItinerary())) {
+            throw new ItineraryNotFoundException(employee.getId());
+        }
 
         String dayPeriod;
 

@@ -52,14 +52,15 @@ public class RegisterEmployeeUsecase {
         validateFirstNameAndLastNameUsed(registerEmployeeInput);
 
         Employee fillEmployee = fillEmployee(registerEmployeeInput);
+        Position position = findPosition(registerEmployeeInput.getPositionId());
 
-        String userKcId = createEmployeeKeycloack(registerEmployeeInput, registerEmployeeInput.getPassword());
+        String userKcId = createEmployeeKeycloack(registerEmployeeInput, registerEmployeeInput.getPassword(), position.getName());
         fillEmployee.setKeycloakId(userKcId);
 
         Employee employeeCreated = persistNewEmployee(fillEmployee);
 
         setEmployeeRole(employeeCreated);
-        setEmployeePosition(employeeCreated, registerEmployeeInput.getPositionId());
+        setEmployeePosition(employeeCreated, position);
 
         handlePersonalData(employeeCreated, registerEmployeeInput);
 
@@ -113,8 +114,8 @@ public class RegisterEmployeeUsecase {
         return passwordEncoder.encode(rawPassword);
     }
 
-    private String createEmployeeKeycloack(RegisterEmployeeInput employeeInput, String rawPassword) {
-        return employeeKeycloakClient.registerUser(employeeInput, rawPassword);
+    private String createEmployeeKeycloack(RegisterEmployeeInput employeeInput, String rawPassword, EnterprisePosition enterprisePosition) {
+        return employeeKeycloakClient.registerUser(employeeInput, rawPassword, enterprisePosition);
     }
 
     private void setEmployeeRole(Employee employee) {
@@ -124,8 +125,7 @@ public class RegisterEmployeeUsecase {
         employeeSystemRoleDataProvider.create(employeeSystemRole);
     }
 
-    private void setEmployeePosition(Employee employee, Long positionId) {
-        Position position = findPosition(positionId);
+    private void setEmployeePosition(Employee employee, Position position) {
         EmployeePosition employeePosition = new EmployeePosition(employee, position);
 
         persistEmployeePosition(employeePosition);

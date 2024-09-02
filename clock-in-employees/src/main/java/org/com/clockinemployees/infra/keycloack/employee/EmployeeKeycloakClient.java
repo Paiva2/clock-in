@@ -31,7 +31,7 @@ public class EmployeeKeycloakClient {
 
     static {
         rolesMapper = new HashMap<>() {{
-            put(EnterprisePosition.EMPLOYEE, KeycloakRelatedRoles.USER);
+            put(EnterprisePosition.EMPLOYEE, KeycloakRelatedRoles.EMPLOYEE);
             put(EnterprisePosition.HUMAN_RESOURCES, KeycloakRelatedRoles.HUMAN_RESOURCES);
             put(EnterprisePosition.MANAGER, KeycloakRelatedRoles.MANAGER);
             put(EnterprisePosition.CEO, KeycloakRelatedRoles.ADMIN);
@@ -42,7 +42,7 @@ public class EmployeeKeycloakClient {
         return keyloackBuilderConfig.getInstance().realm(keyloackBuilderConfig.getRealm());
     }
 
-    public String registerUser(RegisterEmployeeInput employeeInput, String rawPassword) {
+    public String registerUser(RegisterEmployeeInput employeeInput, String rawPassword, EnterprisePosition enterprisePosition) {
         RealmResource kcRealmResource = getInstance();
         UsersResource kcUsers = kcRealmResource.users();
 
@@ -56,7 +56,7 @@ public class EmployeeKeycloakClient {
 
         String userKcId = CreatedResponseUtil.getCreatedId(response);
 
-        String userRole = rolesMapper.get(EnterprisePosition.EMPLOYEE).roleName();
+        String userRole = rolesMapper.get(enterprisePosition).roleName();
 
         RoleRepresentation userRealmRole = kcRealmResource.roles().get(userRole).toRepresentation();
         kcUsers.get(userKcId).roles().realmLevel().add(List.of(userRealmRole));
@@ -103,7 +103,7 @@ public class EmployeeKeycloakClient {
             CredentialRepresentation credentialRepresentation = createUserPasswordCredentials(rawPassword);
             userRepresentation.setCredentials(Collections.singletonList(credentialRepresentation));
         }
-        
+
         user.update(userRepresentation);
     }
 
@@ -148,7 +148,7 @@ public class EmployeeKeycloakClient {
     }
 
     public enum KeycloakRelatedRoles {
-        USER("USER"),
+        EMPLOYEE("EMPLOYEE"),
         HUMAN_RESOURCES("HUMAN_RESOURCES"),
         MANAGER("MANAGER"),
         ADMIN("ADMIN");
