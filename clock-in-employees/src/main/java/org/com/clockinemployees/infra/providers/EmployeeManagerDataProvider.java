@@ -1,6 +1,7 @@
 package org.com.clockinemployees.infra.providers;
 
 import lombok.AllArgsConstructor;
+import org.com.clockinemployees.domain.entity.Employee;
 import org.com.clockinemployees.domain.entity.EmployeeManager;
 import org.com.clockinemployees.infra.repository.EmployeeManagerRepository;
 import org.springframework.data.domain.Page;
@@ -29,5 +30,9 @@ public class EmployeeManagerDataProvider {
 
     public EmployeeManager save(EmployeeManager employeeManager) {
         return employeeManagerRepository.save(employeeManager);
+    }
+
+    public void remove(Employee employee, Employee manager) {
+        employeeManagerRepository.deleteEmployeeManager(employee.getId(), manager.getId());
     }
 }

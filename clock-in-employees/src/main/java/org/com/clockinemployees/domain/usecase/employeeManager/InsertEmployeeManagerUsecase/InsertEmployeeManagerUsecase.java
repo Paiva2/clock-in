@@ -1,4 +1,4 @@
-package org.com.clockinemployees.domain.usecase.employee.InsertEmployeeManagerUsecase;
+package org.com.clockinemployees.domain.usecase.employeeManager.InsertEmployeeManagerUsecase;
 
 import lombok.AllArgsConstructor;
 import org.com.clockinemployees.domain.entity.Employee;
@@ -6,9 +6,9 @@ import org.com.clockinemployees.domain.entity.EmployeeManager;
 import org.com.clockinemployees.domain.entity.EmployeePosition;
 import org.com.clockinemployees.domain.enums.EnterprisePosition;
 import org.com.clockinemployees.domain.usecase.common.exception.EmployeeNotFoundException;
-import org.com.clockinemployees.domain.usecase.employee.InsertEmployeeManagerUsecase.exception.EmployeeAlreadyHasManagerException;
-import org.com.clockinemployees.domain.usecase.employee.InsertEmployeeManagerUsecase.exception.OnlyCeoOrHrException;
-import org.com.clockinemployees.domain.usecase.employee.InsertEmployeeManagerUsecase.exception.OnlyManagerException;
+import org.com.clockinemployees.domain.usecase.employeeManager.InsertEmployeeManagerUsecase.exception.EmployeeAlreadyHasManagerException;
+import org.com.clockinemployees.domain.usecase.employeeManager.InsertEmployeeManagerUsecase.exception.OnlyCeoOrHrException;
+import org.com.clockinemployees.domain.usecase.employeeManager.InsertEmployeeManagerUsecase.exception.OnlyManagerException;
 import org.com.clockinemployees.domain.usecase.employee.registerEmployeeUsecase.exception.ManagerNotFoundException;
 import org.com.clockinemployees.domain.usecase.employee.registerEmployeeUsecase.exception.SuperiorNotFoundException;
 import org.com.clockinemployees.domain.usecase.position.editEmployeePositionUsecase.exception.EmployeePositionNotFoundException;

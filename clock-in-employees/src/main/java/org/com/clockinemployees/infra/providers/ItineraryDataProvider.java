@@ -19,4 +19,8 @@ public class ItineraryDataProvider {
     public Itinerary persist(Itinerary itinerary) {
         return itineraryRepository.save(itinerary);
     }
+
+    public void remove(Long itineraryId) {
+        itineraryRepository.deleteById(itineraryId);
+    }
 }

@@ -1,4 +1,4 @@
-package org.com.clockinemployees.domain.usecase.employee.InsertEmployeeManagerUsecase.exception;
+package org.com.clockinemployees.domain.usecase.employeeManager.InsertEmployeeManagerUsecase.exception;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.ResponseStatus;
