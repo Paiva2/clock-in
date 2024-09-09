@@ -1,4 +1,4 @@
-package org.com.clockinemployees.domain.usecase.itinerary.addEmployeeItineraryUsecase.exception;
+package org.com.clockinemployees.domain.usecase.common.exception;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.ResponseStatus;

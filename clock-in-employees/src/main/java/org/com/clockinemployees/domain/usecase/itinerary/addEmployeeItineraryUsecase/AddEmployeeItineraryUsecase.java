@@ -1,18 +1,21 @@
 package org.com.clockinemployees.domain.usecase.itinerary.addEmployeeItineraryUsecase;
 
 import lombok.AllArgsConstructor;
-import org.apache.commons.lang.time.DateUtils;
 import org.com.clockinemployees.domain.entity.Employee;
 import org.com.clockinemployees.domain.entity.EmployeeManager;
 import org.com.clockinemployees.domain.entity.EmployeePosition;
 import org.com.clockinemployees.domain.entity.Itinerary;
 import org.com.clockinemployees.domain.enums.EnterprisePosition;
+import org.com.clockinemployees.domain.strategy.dateValidatorStrategy.HourValidator;
+import org.com.clockinemployees.domain.strategy.dateValidatorStrategy.strategies.HourStringRegexValidatorStrategy;
 import org.com.clockinemployees.domain.usecase.common.exception.EmployeeNotFoundException;
+import org.com.clockinemployees.domain.usecase.common.exception.InvalidHourFormatException;
 import org.com.clockinemployees.domain.usecase.employee.registerEmployeeUsecase.exception.ManagerNotFoundException;
 import org.com.clockinemployees.domain.usecase.itinerary.addEmployeeItineraryUsecase.dto.AddEmployeeItineraryInput;
 import org.com.clockinemployees.domain.usecase.itinerary.addEmployeeItineraryUsecase.dto.AddEmployeeItineraryOutput;
 import org.com.clockinemployees.domain.usecase.itinerary.addEmployeeItineraryUsecase.exception.EmployeeAlreadyHasItineraryException;
-import org.com.clockinemployees.domain.usecase.itinerary.addEmployeeItineraryUsecase.exception.InvalidHourFormatException;
+import org.com.clockinemployees.domain.usecase.itinerary.makeEmployeeDayWorkHours.MakeEmployeeDayWorkHoursUsecase;
+import org.com.clockinemployees.domain.usecase.itinerary.makeEmployeeDayWorkHours.dto.MakeEmployeeDayWorkHoursInput;
 import org.com.clockinemployees.domain.usecase.position.editEmployeePositionUsecase.exception.EmployeePositionNotFoundException;
 import org.com.clockinemployees.domain.usecase.position.editEmployeePositionUsecase.exception.InsufficientPositionException;
 import org.com.clockinemployees.infra.providers.EmployeeDataProvider;
@@ -21,23 +24,21 @@ import org.com.clockinemployees.infra.providers.EmployeePositionDataProvider;
 import org.com.clockinemployees.infra.providers.ItineraryDataProvider;
 import org.springframework.stereotype.Service;
 
-import java.text.MessageFormat;
-import java.util.*;
-import java.util.concurrent.TimeUnit;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
+import java.util.Objects;
+import java.util.Optional;
+import java.util.Set;
 
 @AllArgsConstructor
 @Service
 public class AddEmployeeItineraryUsecase {
-    private final static String HOUR_PATTERN = "^(0[0-9]|1[0-9]|2[0-3]):([0-5][0-9])$"; // HH:MM
-
     private final EmployeeDataProvider employeeDataProvider;
     private final ItineraryDataProvider itineraryDataProvider;
     private final EmployeePositionDataProvider employeePositionDataProvider;
     private final EmployeeManagerDataProvider employeeManagerDataProvider;
+    private final MakeEmployeeDayWorkHoursUsecase makeEmployeeDayWorkHoursUsecase;
+    private final HourValidator hourValidator = new HourValidator(new HourStringRegexValidatorStrategy());
 
-    public AddEmployeeItineraryOutput execute(String resourceServerManagerId, AddEmployeeItineraryInput input) {
+    public AddEmployeeItineraryOutput execute(String resourceServerManagerId, Long employeeId, AddEmployeeItineraryInput input) {
         validateInputHours(input);
 
         Employee manager = findManager(resourceServerManagerId);
@@ -46,7 +47,7 @@ public class AddEmployeeItineraryUsecase {
             throw new ManagerNotFoundException();
         }
 
-        Employee employee = findEmployee(input.getEmployeeId());
+        Employee employee = findEmployee(employeeId);
 
         if (Objects.nonNull(employee.getDisabledAt())) {
             throw new EmployeeNotFoundException();
@@ -69,10 +70,9 @@ public class AddEmployeeItineraryUsecase {
     }
 
     private void validateHourPattern(String inputHour, String field) {
-        Pattern pattern = Pattern.compile(HOUR_PATTERN);
-        Matcher matcher = pattern.matcher(inputHour);
+        boolean isValidFormat = hourValidator.validate(inputHour);
 
-        if (!matcher.matches()) {
+        if (!isValidFormat) {
             throw new InvalidHourFormatException(field);
         }
     }
@@ -102,7 +102,13 @@ public class AddEmployeeItineraryUsecase {
     }
 
     private Itinerary fillItinerary(AddEmployeeItineraryInput input, Employee employee) {
-        String darkWorkHours = makeEmployeeDayWorkHour(input);
+        String darkWorkHours = makeEmployeeDayWorkHoursUsecase.execute(MakeEmployeeDayWorkHoursInput.builder()
+            .hourIn(input.getHourIn())
+            .intervalIn(input.getIntervalIn())
+            .intervalOut(input.getIntervalOut())
+            .hourOut(input.getHourOut())
+            .build()
+        );
 
         return Itinerary.builder()
             .inHour(input.getHourIn())
@@ -112,70 +118,6 @@ public class AddEmployeeItineraryUsecase {
             .employee(employee)
             .dayWorkHours(darkWorkHours)
             .build();
-    }
-
-    private String makeEmployeeDayWorkHour(AddEmployeeItineraryInput input) {
-        String[] hourAndMinuteIn = input.getHourIn().split(":");
-        String[] hourAndMinuteOut = input.getHourOut().split(":");
-
-        String[] hourAndMinuteIntervalIn = input.getIntervalIn().split(":");
-        String[] hourAndMinuteIntervalOut = input.getIntervalOut().split(":");
-
-        Date timeIn = dateFromHourInput(hourAndMinuteIn, 0);
-        Date timeOut = dateFromHourInput(hourAndMinuteOut, 0);
-
-        Date timeIntervalIn = dateFromHourInput(hourAndMinuteIntervalIn, 0);
-        Date timeIntervalOut = dateFromHourInput(hourAndMinuteIntervalOut, 0);
-
-        Integer inHour = Integer.parseInt(hourAndMinuteIn[0]);
-        Integer outHour = Integer.parseInt(hourAndMinuteOut[0]);
-
-        Boolean employeeClockOutNextDay = inHour > outHour;
-
-        if (employeeClockOutNextDay) {
-            timeOut = DateUtils.addDays(timeOut, 1);
-        }
-
-        Long intervalDurationDiff = (timeIntervalOut.getTime() - timeIntervalIn.getTime()) / 1000;
-        Long totalWorkDayInSeconds = ((timeOut.getTime() - timeIn.getTime()) / 1000) - intervalDurationDiff;
-        Long totalWorkDayHours = TimeUnit.SECONDS.toHours(totalWorkDayInSeconds) % 24;
-        Long totalWorkDayMinutes = TimeUnit.SECONDS.toMinutes(totalWorkDayInSeconds) % 60;
-
-        return buildHoursFormatString(totalWorkDayHours, totalWorkDayMinutes);
-    }
-
-    private String buildHoursFormatString(Long hours, Long minutes) {
-        StringBuilder stringBuilder = new StringBuilder();
-
-        if (hours < 10) {
-            stringBuilder.append("0");
-        }
-
-        stringBuilder.append("{0}").append(":");
-
-        if (minutes < 10) {
-            stringBuilder.append("0");
-        }
-
-        stringBuilder.append("{1}");
-
-        return MessageFormat.format(stringBuilder.toString(), hours, minutes);
-    }
-
-    private Date dateFromHourInput(String[] hourAndMinute, Integer daysToAdd) {
-        Integer hours = Integer.parseInt(hourAndMinute[0]);
-        Integer minutes = Integer.parseInt(hourAndMinute[1]);
-
-        Calendar calendar = Calendar.getInstance();
-        calendar.set(Calendar.HOUR_OF_DAY, hours);
-        calendar.set(Calendar.MINUTE, minutes);
-        calendar.set(Calendar.SECOND, 0);
-
-        if (daysToAdd > 0) {
-            calendar.set(Calendar.DATE, daysToAdd);
-        }
-
-        return calendar.getTime();
     }
 
     private Itinerary persistNewItinerary(Itinerary itinerary) {

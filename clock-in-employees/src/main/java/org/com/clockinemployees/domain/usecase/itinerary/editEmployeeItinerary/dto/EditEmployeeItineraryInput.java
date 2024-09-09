@@ -1,4 +1,4 @@
-package org.com.clockinemployees.domain.usecase.itinerary.addEmployeeItineraryUsecase.dto;
+package org.com.clockinemployees.domain.usecase.itinerary.editEmployeeItinerary.dto;
 
 import jakarta.validation.constraints.NotBlank;
 import lombok.AllArgsConstructor;
@@ -8,7 +8,7 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 @NoArgsConstructor
 @Data
-public class AddEmployeeItineraryInput {
+public class EditEmployeeItineraryInput {
     @NotBlank
     private String hourIn;
 
