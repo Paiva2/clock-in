@@ -7,6 +7,8 @@ import org.com.clockinemployees.domain.usecase.employee.disableEmployeeUsecase.D
 import org.com.clockinemployees.domain.usecase.employee.disableEmployeeUsecase.dto.DisableEmployeeOutput;
 import org.com.clockinemployees.domain.usecase.employee.editEmployeeProfileUsecase.EditEmployeeProfileUsecase;
 import org.com.clockinemployees.domain.usecase.employee.editEmployeeProfileUsecase.dto.EditEmployeeProfileInput;
+import org.com.clockinemployees.domain.usecase.employee.enableEmployeeUsecase.EnableEmployeeUsecase;
+import org.com.clockinemployees.domain.usecase.employee.enableEmployeeUsecase.dto.EnableEmployeeOutput;
 import org.com.clockinemployees.domain.usecase.employee.getEmployeeProfileUsecase.GetEmployeeProfileUsecase;
 import org.com.clockinemployees.domain.usecase.employee.listEmployees.ListEmployeesUsecase;
 import org.com.clockinemployees.domain.usecase.employee.listEmployees.dto.ListEmployeesInput;
@@ -31,6 +33,7 @@ public class EmployeeControllerImpl implements EmployeeController {
     private final EditEmployeeProfileUsecase editEmployeeProfileUsecase;
     private final GetEmployeeProfileUsecase getEmployeeProfileUsecase;
     private final ListManagerEmployeesUsecase listManagerEmployeesUsecase;
+    private final EnableEmployeeUsecase enableEmployeeUsecase;
 
     @Override
     public ResponseEntity<RegisterEmployeeOutput> registerEmployee(
@@ -67,6 +70,12 @@ public class EmployeeControllerImpl implements EmployeeController {
         Long employeeId
     ) {
         DisableEmployeeOutput output = disableEmployeeUsecase.execute(jwt.getSubject(), employeeId);
+        return new ResponseEntity<>(output, HttpStatus.OK);
+    }
+
+    @Override
+    public ResponseEntity<EnableEmployeeOutput> enableEmployee(Jwt jwt, Long employeeId) {
+        EnableEmployeeOutput output = enableEmployeeUsecase.execute(jwt.getSubject(), employeeId);
         return new ResponseEntity<>(output, HttpStatus.OK);
     }
 

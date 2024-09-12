@@ -1,64 +1,56 @@
-package org.com.clockinemployees.domain.usecase.employee.disableEmployeeUsecase;
+package org.com.clockinemployees.domain.usecase.employee.enableEmployeeUsecase;
 
 import lombok.AllArgsConstructor;
-import lombok.Builder;
 import org.com.clockinemployees.domain.entity.Employee;
 import org.com.clockinemployees.domain.entity.EmployeeManager;
 import org.com.clockinemployees.domain.entity.EmployeePosition;
 import org.com.clockinemployees.domain.enums.EnterprisePosition;
 import org.com.clockinemployees.domain.usecase.common.exception.EmployeeNotFoundException;
-import org.com.clockinemployees.domain.usecase.common.exception.EmployeeSuperiorNotFoundException;
-import org.com.clockinemployees.domain.usecase.employee.disableEmployeeUsecase.dto.DisableEmployeeOutput;
+import org.com.clockinemployees.domain.usecase.employee.enableEmployeeUsecase.dto.EnableEmployeeOutput;
+import org.com.clockinemployees.domain.usecase.employee.registerEmployeeUsecase.exception.SuperiorNotFoundException;
 import org.com.clockinemployees.domain.usecase.position.editEmployeePositionUsecase.exception.InsufficientPositionException;
 import org.com.clockinemployees.infra.keycloack.employee.EmployeeKeycloakClient;
 import org.com.clockinemployees.infra.providers.EmployeeDataProvider;
 import org.com.clockinemployees.infra.providers.EmployeeManagerDataProvider;
 import org.com.clockinemployees.infra.providers.EmployeePositionDataProvider;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
-import java.util.Date;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 
 @AllArgsConstructor
-@Builder
 @Service
-public class DisableEmployeeUsecase {
+public class EnableEmployeeUsecase {
     private final EmployeeDataProvider employeeDataProvider;
-    private final EmployeeManagerDataProvider employeeManagerDataProvider;
     private final EmployeePositionDataProvider employeePositionDataProvider;
+    private final EmployeeManagerDataProvider employeeManagerDataProvider;
     private final EmployeeKeycloakClient employeeKeycloakClient;
 
-    public DisableEmployeeOutput execute(String superiorId, Long employeeId) {
+    @Transactional
+    public EnableEmployeeOutput execute(String superiorId, Long employeeId) {
         Employee superior = findSuperior(superiorId);
 
         if (Objects.nonNull(superior.getDisabledAt())) {
-            throw new EmployeeSuperiorNotFoundException();
+            throw new SuperiorNotFoundException();
         }
 
         Employee employee = findEmployee(employeeId);
 
-        if (Objects.nonNull(employee.getDisabledAt())) {
-            throw new EmployeeNotFoundException();
-        }
-
         handleSuperiorPermissions(superior, employee);
 
-        employee.setDisabledAt(new Date());
+        if (Objects.isNull(employee.getDisabledAt())) {
+            return mountOutput(employee, superior);
+        }
 
-        Employee disabledEmployee = persistEmployeeDisabled(employee);
-        disableUserResourceServer(disabledEmployee.getKeycloakId());
+        enableEmployee(employee);
 
-        return mountOutput(disabledEmployee, superior.getId());
+        return mountOutput(employee, superior);
     }
 
     private Employee findSuperior(String superiorId) {
-        return employeeDataProvider.findByResourceServerId(superiorId).orElseThrow(EmployeeSuperiorNotFoundException::new);
-    }
-
-    private Employee findEmployee(Long employeeId) {
-        return employeeDataProvider.findById(employeeId).orElseThrow(EmployeeNotFoundException::new);
+        return employeeDataProvider.findByResourceServerId(superiorId).orElseThrow(SuperiorNotFoundException::new);
     }
 
     private void handleSuperiorPermissions(Employee superior, Employee employee) {
@@ -69,6 +61,12 @@ public class DisableEmployeeUsecase {
         if (!isCeoOrHr) {
             checkEmployeeManager(superior.getId(), employee.getId());
         }
+    }
+
+    private void enableEmployee(Employee employee) {
+        employee.setDisabledAt(null);
+        employeeKeycloakClient.handleUserEnabled(employee.getKeycloakId(), true);
+        employeeDataProvider.save(employee);
     }
 
     private void checkEmployeeManager(Long managerId, Long employeeId) {
@@ -83,21 +81,17 @@ public class DisableEmployeeUsecase {
         return employeePositionDataProvider.findAllByEmployeeId(superiorId);
     }
 
-    private void disableUserResourceServer(String userResourceServerId) {
-        employeeKeycloakClient.handleUserEnabled(userResourceServerId, false);
+    private Employee findEmployee(Long employeeId) {
+        return employeeDataProvider.findById(employeeId).orElseThrow(EmployeeNotFoundException::new);
     }
 
-    private Employee persistEmployeeDisabled(Employee employee) {
-        return employeeDataProvider.save(employee);
-    }
-
-    private DisableEmployeeOutput mountOutput(Employee disabledEmployee, Long superiorId) {
-        return DisableEmployeeOutput.builder()
-            .employeeId(disabledEmployee.getId())
-            .firstName(disabledEmployee.getFirstName())
-            .lastName(disabledEmployee.getLastName())
-            .email(disabledEmployee.getEmail())
-            .actionDoneBySuperiorId(superiorId)
+    private EnableEmployeeOutput mountOutput(Employee employee, Employee superior) {
+        return EnableEmployeeOutput.builder()
+            .firstName(employee.getFirstName())
+            .lastName(employee.getLastName())
+            .email(employee.getEmail())
+            .employeeId(employee.getId())
+            .actionDoneBySuperiorId(superior.getId())
             .build();
     }
 }
