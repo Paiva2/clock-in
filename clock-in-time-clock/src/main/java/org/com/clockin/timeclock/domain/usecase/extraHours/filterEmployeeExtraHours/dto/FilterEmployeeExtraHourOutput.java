@@ -1,4 +1,4 @@
-package org.com.clockin.timeclock.domain.usecase.extraHours.dto;
+package org.com.clockin.timeclock.domain.usecase.extraHours.filterEmployeeExtraHours.dto;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;

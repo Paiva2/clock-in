@@ -7,6 +7,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Component;
 
+import java.util.Date;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -33,5 +34,9 @@ public class ExtraHoursDataProvider {
 
     public void removeById(UUID id) {
         extraHoursRepository.deleteById(id);
+    }
+
+    public void removeAllByEmployeeId(Long employeeId, Date from, Date to) {
+        extraHoursRepository.deleteByEmployeeIdPeriod(employeeId, from, to);
     }
 }

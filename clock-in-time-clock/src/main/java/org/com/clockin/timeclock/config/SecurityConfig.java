@@ -41,6 +41,7 @@ public class SecurityConfig {
                 .requestMatchers("/time-clock/approve/pending/*").hasAnyAuthority("ROLE_realm_ceo", "ROLE_realm_human_resources", "ROLE_realm_manager")
                 .requestMatchers("/time-clock/deny/pending/*").hasAnyAuthority("ROLE_realm_ceo", "ROLE_realm_human_resources", "ROLE_realm_manager")
                 .requestMatchers("/time-clock/list/pending/*").hasAnyAuthority("ROLE_realm_ceo", "ROLE_realm_human_resources", "ROLE_realm_manager")
+                .requestMatchers("/time-clock/employee/{employeeId}/extra-hours").hasAnyAuthority("ROLE_realm_ceo", "ROLE_realm_human_resources", "ROLE_realm_manager")
                 .requestMatchers("/time-clock/employee/{employeeId}/list").hasAnyAuthority("ROLE_realm_ceo", "ROLE_realm_human_resources", "ROLE_realm_manager")
                 .anyRequest().authenticated()
         );

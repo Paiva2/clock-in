@@ -4,10 +4,12 @@ import org.com.clockin.timeclock.domain.entity.ExtraHours;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
+import java.util.Date;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -50,4 +52,12 @@ public interface ExtraHoursRepository extends JpaRepository<ExtraHours, UUID> {
                 )
         """, nativeQuery = true)
     Long findTotalByExternalEmployeeId(@Param("employeeId") Long employeeId, @Param("period") String period, @Param("from") String from, @Param("to") String to);
+
+    @Query(value = """
+        DELETE FROM "clock-in-db".public2.tb_extra_hours
+        WHERE eh_external_employee_id = :employeeId
+        AND date_trunc('day', cast(to_char(to_date(eh_day_period, 'DD-MM-YYYY'), 'YYYY-MM-DD') as DATE)) BETWEEN date_trunc('day', cast(:from as DATE)) AND date_trunc('day', cast(:to as DATE))
+        """, nativeQuery = true)
+    @Modifying
+    void deleteByEmployeeIdPeriod(@Param("employeeId") Long employeeId, @Param("from") Date from, @Param("to") Date to);
 }

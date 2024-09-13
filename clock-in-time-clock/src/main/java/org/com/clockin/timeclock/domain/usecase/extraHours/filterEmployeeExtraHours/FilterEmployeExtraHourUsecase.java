@@ -1,4 +1,4 @@
-package org.com.clockin.timeclock.domain.usecase.extraHours;
+package org.com.clockin.timeclock.domain.usecase.extraHours.filterEmployeeExtraHours;
 
 import feign.FeignException;
 import lombok.AllArgsConstructor;
@@ -7,8 +7,8 @@ import org.com.clockin.timeclock.domain.entity.ExtraHours;
 import org.com.clockin.timeclock.domain.entity.external.Employee;
 import org.com.clockin.timeclock.domain.strategy.dateFormatValidator.DateTimeFormatStrategy;
 import org.com.clockin.timeclock.domain.strategy.dateFormatValidator.strategies.DateFormatRegexValidator;
-import org.com.clockin.timeclock.domain.usecase.extraHours.dto.FilterEmployeeExtraHourOutput;
-import org.com.clockin.timeclock.domain.usecase.extraHours.dto.FindEmployeeExtraHourInput;
+import org.com.clockin.timeclock.domain.usecase.extraHours.filterEmployeeExtraHours.dto.FilterEmployeeExtraHourOutput;
+import org.com.clockin.timeclock.domain.usecase.extraHours.filterEmployeeExtraHours.dto.FindEmployeeExtraHourInput;
 import org.com.clockin.timeclock.domain.usecase.timeClock.registerTimeClockUsecase.exception.EmployeeNotFoundException;
 import org.com.clockin.timeclock.domain.utils.DateHandler;
 import org.com.clockin.timeclock.infra.dataProvider.ExtraHoursDataProvider;
